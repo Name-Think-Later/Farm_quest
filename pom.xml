@@ -71,6 +71,19 @@
             <artifactId>spring-boot-starter-webmvc-test</artifactId>
             <scope>test</scope>
         </dependency>
+
+        <!--
+          Source - https://stackoverflow.com/a/79828746
+          Posted by Zakaria Akrach, modified by community. See post 'Timeline' for change history
+          Retrieved 2026-06-01, License - CC BY-SA 4.0
+        -->
+        <dependency>
+            <groupId>one.stayfocused.spring</groupId>
+            <artifactId>dotenv-spring-boot</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+
+
     </dependencies>
 
     <build>
