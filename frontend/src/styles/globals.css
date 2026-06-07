@@ -1,0 +1,219 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+body,
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+a {
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.app-shell {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  min-height: 100vh;
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.page-header,
+.section-card,
+.status-card,
+.chat-message,
+.coupon-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+}
+
+.page-header,
+.section-card,
+.status-card,
+.coupon-card {
+  padding: var(--space-4);
+}
+
+.page-header h1 {
+  margin: var(--space-1) 0;
+  font-size: 1.75rem;
+}
+
+.page-description,
+.helper-text,
+.muted-text,
+ul,
+li,
+p {
+  color: var(--color-muted);
+  line-height: 1.5;
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.page-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.page-actions {
+  margin-top: auto;
+  position: sticky;
+  bottom: 0;
+  padding-bottom: calc(var(--space-4) + env(safe-area-inset-bottom));
+  background: linear-gradient(to top, var(--color-bg), rgba(247, 247, 242, 0.75));
+}
+
+.primary-button,
+.secondary-button,
+.text-button {
+  width: 100%;
+  min-height: 48px;
+  border-radius: 999px;
+  border: 0;
+  padding: 0.85rem 1rem;
+  font-weight: 700;
+}
+
+.primary-button {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.secondary-button {
+  background: #ebe7dc;
+  color: var(--color-text);
+}
+
+.text-button {
+  background: transparent;
+  color: var(--color-primary-strong);
+  text-decoration: underline;
+}
+
+.network-banner {
+  border-radius: var(--radius-sm);
+  padding: 0.75rem 1rem;
+  font-weight: 600;
+}
+
+.network-banner.online {
+  background: rgba(37, 111, 74, 0.12);
+  color: var(--color-online);
+}
+
+.network-banner.offline {
+  background: rgba(138, 90, 0, 0.12);
+  color: var(--color-offline);
+}
+
+.status-error {
+  border-color: rgba(159, 45, 45, 0.35);
+}
+
+.status-list,
+.info-list {
+  display: grid;
+  gap: var(--space-2);
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.input-field,
+.textarea-field {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  padding: 0.9rem 1rem;
+  background: #fff;
+  color: var(--color-text);
+}
+
+.field-group {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.field-label {
+  font-weight: 700;
+}
+
+.field-error {
+  color: var(--color-danger);
+  font-weight: 600;
+}
+
+.route-links {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.route-link {
+  display: block;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  background: #fff;
+  text-decoration: none;
+}
+
+.chat-log {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.chat-message {
+  padding: 1rem;
+}
+
+.chat-message.user {
+  border-left: 4px solid var(--color-primary);
+}
+
+.chat-message.ai {
+  border-left: 4px solid #8b6f1f;
+}
+
+.coupon-status {
+  display: inline-block;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  font-weight: 700;
+  background: #ebe7dc;
+}
+
+.inline-row {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.inline-row > * {
+  flex: 1;
+}
