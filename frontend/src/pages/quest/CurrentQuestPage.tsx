@@ -14,7 +14,6 @@ export function CurrentQuestPage() {
   return (
     <MobileShell
       title="任務首頁 / 目前任務"
-      description="讓遊客立刻知道現在要去哪裡、做什麼。"
       actions={<button type="button" className="primary-button" onClick={() => navigate(action)} disabled={!query.data}>{query.data?.nextAction ?? '前往下一步'}</button>}
     >
       <NetworkBanner />
@@ -22,16 +21,24 @@ export function CurrentQuestPage() {
       {query.error ? <ErrorState message={(query.error as Error).message} onRetry={() => void query.refetch()} /> : null}
       {query.data ? (
         <>
-          <div className="section-card">
-            <strong>{query.data.stepLabel}</strong>
-            <p>{query.data.description}</p>
+          <div className="section-card primary-feature-card">
+            <p className="section-kicker">{query.data.stepLabel}</p>
+            <strong className="feature-title">{query.data.stateText}</strong>
+            <p className="feature-copy">{query.data.description}</p>
           </div>
-          <div className="section-card">
-            <ul className="info-list">
-              <li>任務進度：第 {query.data.currentStep} / {query.data.totalSteps} 步</li>
-              <li>任務狀態：{query.data.stateText}</li>
-              <li>前往地點提示：{query.data.locationHint}</li>
-            </ul>
+          <div className="section-card split-card">
+            <div>
+              <p className="label-text">任務進度</p>
+              <strong className="value-text">第 {query.data.currentStep} / {query.data.totalSteps} 步</strong>
+            </div>
+            <div>
+              <p className="label-text">目前狀態</p>
+              <strong className="value-text">{query.data.stateText}</strong>
+            </div>
+            <div>
+              <p className="label-text">前往提示</p>
+              <p className="value-paragraph">{query.data.locationHint}</p>
+            </div>
           </div>
         </>
       ) : null}

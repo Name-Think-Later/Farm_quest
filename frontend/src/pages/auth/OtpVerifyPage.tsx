@@ -30,7 +30,6 @@ export function OtpVerifyPage() {
   return (
     <MobileShell
       title="Email 驗證確認"
-      description="請輸入收到的驗證碼。範例：123456 代表成功，000000 代表過期。"
       actions={<button type="submit" form="otp-form" className="primary-button" disabled={mutation.isPending || otp.length < 6}>{mutation.isPending ? '驗證中…' : '確認驗證碼'}</button>}
     >
       <NetworkBanner />

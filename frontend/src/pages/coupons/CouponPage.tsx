@@ -26,14 +26,13 @@ export function CouponPage() {
   return (
     <MobileShell
       title="優惠券頁"
-      description="優惠券有效性以後端狀態為準，店家確認後再由遊客按下使用按鈕。"
       actions={<button type="button" className="primary-button" disabled={!query.data || query.data.status !== 'available' || mutation.isPending} onClick={async () => { await mutation.mutateAsync(); void query.refetch(); }}>{mutation.isPending ? '使用中…' : '確認使用優惠券'}</button>}
     >
       <NetworkBanner />
       {query.isLoading ? <LoadingState message="正在讀取優惠券…" /> : null}
       {query.error ? <ErrorState message={(query.error as Error).message} onRetry={() => void query.refetch()} /> : null}
       {query.data ? (
-        <div className="coupon-card">
+        <div className="coupon-card accent-card">
           <strong>{query.data.title}</strong>
           <p>適用商家：{query.data.merchant}</p>
           <p>有效期限：{query.data.expiresAt}</p>

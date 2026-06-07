@@ -10,7 +10,6 @@ export function LocationVerifyPage() {
   return (
     <MobileShell
       title="地點驗證"
-      description="GPS 是強制條件，確認抵達任務點後才能進入後續謎題。"
       actions={
         <button
           type="button"
@@ -28,10 +27,9 @@ export function LocationVerifyPage() {
       }
     >
       <NetworkBanner />
-      <div className="section-card">
-        <strong>目前任務說明</strong>
-        <p>到達景點後，按下按鈕即可確認並前往 AI 對話頁。</p>
-        <p className="helper-text">正式串接後，這裡會接上真實 GPS 驗證流程。</p>
+      <div className="section-card accent-card">
+        <strong>任務提示</strong>
+        <p>確認已抵達景點後，按下按鈕即可前往下一步，開始與 AI NPC 對話。</p>
       </div>
       {mutation.data?.ok ? (
         <div className="status-card">
