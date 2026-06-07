@@ -5,11 +5,11 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_DB: farm_quest
-      POSTGRES_USER: ${DATABASE_USERNAME:-farm_quest}
-      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-farm_quest}
+      POSTGRES_USER: "${DATABASE_USERNAME:-farm_quest}"
+      POSTGRES_PASSWORD: "${DATABASE_PASSWORD:-farm_quest}"
       TZ: UTC
     ports:
-      - "5432:5432"
+      - "${DATABASE_PORT:-5432}:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
@@ -23,7 +23,7 @@ services:
     container_name: farm-quest-redis
     restart: unless-stopped
     ports:
-      - "6379:6379"
+      - "${REDIS_PORT:-6379}:6379"
     volumes:
       - redis-data:/data
     healthcheck:
