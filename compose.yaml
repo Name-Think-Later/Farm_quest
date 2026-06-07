@@ -42,7 +42,7 @@ services:
     volumes:
       - qdrant-data:/qdrant/storage
     healthcheck:
-      test: [ "CMD", "wget", "-qO-", "http://localhost:6333/healthz" ]
+      test: [ "CMD", "curl", "-fsS", "http://localhost:6333/healthz" ]
       interval: 10s
       timeout: 5s
       retries: 10

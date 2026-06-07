@@ -38,7 +38,7 @@ public class QdrantCollectionInitializer implements ApplicationRunner {
                 .body(Map.of(
                         "vectors", Map.of(
                                 "size", properties.vectorSize(),
-                                "distance", properties.distance()
+                                "distance", normalizeDistance(properties.distance())
                         )
                 ))
                 .retrieve()
@@ -65,5 +65,18 @@ public class QdrantCollectionInitializer implements ApplicationRunner {
         if (StringUtils.hasText(properties.apiKey())) {
             headers.set("api-key", properties.apiKey());
         }
+    }
+
+    private String normalizeDistance(String distance) {
+        if (!StringUtils.hasText(distance)) {
+            return distance;
+        }
+        return switch (distance.trim().toUpperCase()) {
+            case "COSINE" -> "Cosine";
+            case "DOT" -> "Dot";
+            case "EUCLID" -> "Euclid";
+            case "MANHATTAN" -> "Manhattan";
+            default -> distance;
+        };
     }
 }
