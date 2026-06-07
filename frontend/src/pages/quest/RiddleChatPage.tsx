@@ -38,11 +38,13 @@ export function RiddleChatPage() {
         <strong>任務提示</strong>
         <p>你已通過地點驗證，現在可以直接回答「高山茶」，或先向 AI 詢問提示。</p>
       </div>
-      <div className="chat-log">
+      <div className="chat-log line-chat-log">
         {chatMessages.map((message) => (
-          <div key={message.id} className={`chat-message ${message.role}`}>
-            <strong>{message.role === 'ai' ? 'AI NPC' : '你'}</strong>
-            <p>{message.content}</p>
+          <div key={message.id} className={`chat-row ${message.role}`}>
+            <div className={`chat-bubble ${message.role}`}>
+              <strong className="chat-speaker">{message.role === 'ai' ? 'AI NPC' : '你'}</strong>
+              <p>{message.content}</p>
+            </div>
           </div>
         ))}
       </div>

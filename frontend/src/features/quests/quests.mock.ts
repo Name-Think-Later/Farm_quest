@@ -40,24 +40,15 @@ export async function getMockCurrentQuest(): Promise<QuestProgress> {
   };
 }
 
-export async function verifyMockLocation(accuracyMeters: number): Promise<LocationVerificationResponse> {
+export async function verifyMockLocation(): Promise<LocationVerificationResponse> {
   await new Promise((resolve) => setTimeout(resolve, 220));
 
-  if (accuracyMeters > 50) {
-    useSessionStore.getState().setLocationResult(false, '定位精度不足，請移動到空曠處重新定位。', accuracyMeters);
-    return {
-      verified: false,
-      message: '定位精度不足，請移動到空曠處重新定位。',
-      distanceText: '目前誤差過大，暫時無法確認是否抵達任務點。',
-      accuracyMeters,
-    };
-  }
-
+  const accuracyMeters = 18;
   useSessionStore.getState().setLocationResult(true, 'GPS 驗證通過，可以進入後續謎題。', accuracyMeters);
   return {
     verified: true,
     message: 'GPS 驗證通過，可以進入後續謎題。',
-    distanceText: '你已在景點驗證範圍內。',
+    distanceText: '已確認你在任務點範圍內，現在可以前往 AI 對話頁。',
     accuracyMeters,
   };
 }
