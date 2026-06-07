@@ -1,0 +1,10 @@
+package nutc.sot.farm_quest.exception;
+
+public enum AuthErrorCode {
+    INVALID_EMAIL,
+    EMAIL_VERIFICATION_EXPIRED,
+    EMAIL_VERIFICATION_INVALID,
+    EMAIL_VERIFICATION_RATE_LIMITED,
+    SESSION_EXPIRED,
+    SESSION_INVALID
+}

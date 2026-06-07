@@ -2,12 +2,10 @@ package nutc.sot.farm_quest.persistence.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -18,18 +16,18 @@ public class EmailVerificationEntity {
     @Id
     private UUID id;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(optional = false)
     @JoinColumn(name = "game_id", nullable = false)
     private GameEntity game;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "visitor_account_id")
     private VisitorAccountEntity visitorAccount;
 
     @Column(name = "email_normalized", nullable = false, length = 320)
     private String emailNormalized;
 
-    @Column(name = "otp_hash", nullable = false, length = 255)
+    @Column(name = "otp_hash", nullable = false)
     private String otpHash;
 
     @Column(nullable = false, length = 32)

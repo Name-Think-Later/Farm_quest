@@ -69,9 +69,10 @@ public class QdrantCollectionInitializer implements ApplicationRunner {
 
     private String normalizeDistance(String distance) {
         if (!StringUtils.hasText(distance)) {
-            return distance;
+            return "Cosine";
         }
-        return switch (distance.trim().toUpperCase()) {
+        String normalized = distance.trim().toUpperCase();
+        return switch (normalized) {
             case "COSINE" -> "Cosine";
             case "DOT" -> "Dot";
             case "EUCLID" -> "Euclid";
