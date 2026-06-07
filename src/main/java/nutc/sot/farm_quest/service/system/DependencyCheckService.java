@@ -2,15 +2,14 @@ package nutc.sot.farm_quest.service.system;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.sql.DriverManager;
 import java.time.OffsetDateTime;
 import java.util.List;
+import javax.sql.DataSource;
 import lombok.RequiredArgsConstructor;
-import nutc.sot.farm_quest.config.AiProviderProperties;
-import nutc.sot.farm_quest.config.DatasourceProperties;
 import nutc.sot.farm_quest.config.QdrantProperties;
 import nutc.sot.farm_quest.dto.system.DependencyItemResponse;
 import nutc.sot.farm_quest.dto.system.DependencyStatusResponse;
+import org.springframework.core.env.Environment;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -25,11 +24,11 @@ public class DependencyCheckService {
     private static final String STATUS_CONFIGURED = "CONFIGURED";
     private static final String STATUS_MISSING = "MISSING";
 
+    private final DataSource dataSource;
     private final RedisConnectionFactory redisConnectionFactory;
-    private final DatasourceProperties datasourceProperties;
     private final QdrantProperties qdrantProperties;
-    private final AiProviderProperties aiProviderProperties;
-    private final RestClient.Builder restClientBuilder;
+    private final RestClient qdrantRestClient;
+    private final Environment environment;
 
     public DependencyStatusResponse checkDependencies() {
         List<DependencyItemResponse> dependencies = List.of(
@@ -51,15 +50,7 @@ public class DependencyCheckService {
     }
 
     private DependencyItemResponse checkPostgreSql() {
-        if (!StringUtils.hasText(datasourceProperties.getUrl())) {
-            return new DependencyItemResponse("PostgreSQL", STATUS_MISSING, "Datasource URL is not configured");
-        }
-
-        try (var connection = DriverManager.getConnection(
-                datasourceProperties.getUrl(),
-                datasourceProperties.getUsername(),
-                datasourceProperties.getPassword()
-        )) {
+        try (var connection = dataSource.getConnection()) {
             return new DependencyItemResponse("PostgreSQL", STATUS_UP, "Connection successful");
         } catch (Exception ex) {
             return new DependencyItemResponse("PostgreSQL", STATUS_DOWN, sanitizeMessage(ex));
@@ -79,12 +70,14 @@ public class DependencyCheckService {
     }
 
     private DependencyItemResponse checkQdrant() {
+        if (!qdrantProperties.enabled()) {
+            return new DependencyItemResponse("Qdrant", STATUS_MISSING, "Qdrant is disabled");
+        }
+
         try {
-            restClientBuilder
-                    .baseUrl(qdrantProperties.getUrl())
-                    .build()
+            qdrantRestClient
                     .get()
-                    .uri("/collections/{collectionName}", qdrantProperties.getCollectionName())
+                    .uri("/collections/{collectionName}", qdrantProperties.collectionName())
                     .retrieve()
                     .toBodilessEntity();
             return new DependencyItemResponse("Qdrant", STATUS_UP, "Collection reachable");
@@ -94,12 +87,34 @@ public class DependencyCheckService {
     }
 
     private DependencyItemResponse checkAiProvider() {
-        boolean hasName = StringUtils.hasText(aiProviderProperties.getName());
-        boolean hasApiKey = StringUtils.hasText(aiProviderProperties.getApiKey());
-        if (hasName && hasApiKey) {
+        boolean hasChatProvider = StringUtils.hasText(firstPresent(
+                environment.getProperty("spring.ai.chat.provider"),
+                environment.getProperty("SPRING_AI_CHAT_PROVIDER")
+        ));
+        boolean hasEmbeddingProvider = StringUtils.hasText(firstPresent(
+                environment.getProperty("spring.ai.embedding.provider"),
+                environment.getProperty("SPRING_AI_EMBEDDING_PROVIDER")
+        ));
+        boolean hasAnyApiKey = StringUtils.hasText(firstPresent(
+                environment.getProperty("llm.api-key"),
+                environment.getProperty("LLM_API_KEY"),
+                environment.getProperty("embedding.api-key"),
+                environment.getProperty("EMBEDDING_API_KEY")
+        ));
+
+        if (hasChatProvider && hasEmbeddingProvider && hasAnyApiKey) {
             return new DependencyItemResponse("Spring AI Provider", STATUS_CONFIGURED, "Provider configuration present");
         }
         return new DependencyItemResponse("Spring AI Provider", STATUS_MISSING, "Provider configuration incomplete");
+    }
+
+    private String firstPresent(String... values) {
+        for (String value : values) {
+            if (StringUtils.hasText(value)) {
+                return value;
+            }
+        }
+        return null;
     }
 
     private String sanitizeMessage(Exception exception) {
