@@ -1,4 +1,5 @@
-import { ChatMessage, CouponStatus } from '../session/sessionStore';
+import type { CouponStatus } from '../coupons/types';
+import type { ChatMessage } from '../session/sessionStore';
 
 export type QuestProgress = {
   stepLabel: string;

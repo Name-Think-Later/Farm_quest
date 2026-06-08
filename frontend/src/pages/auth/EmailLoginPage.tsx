@@ -50,7 +50,7 @@ export function EmailLoginPage() {
           <label className="field-label" htmlFor="email">Email</label>
           <input id="email" className="input-field" type="email" inputMode="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="name@example.com" />
           {emailError ? <span className="field-error">{emailError}</span> : null}
-          <p className="helper-text">重新寄送需冷卻，避免重複寄送。</p>
+          <p className="helper-text">請先完成 Email 登入與 OTP 驗證，才能進入任務與優惠券流程。重新寄送需冷卻，避免重複寄送。</p>
         </div>
       </form>
       {submittedMessage ? <div className="status-card"><strong>送出結果</strong><p>{submittedMessage}</p></div> : null}

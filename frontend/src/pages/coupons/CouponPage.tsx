@@ -3,9 +3,10 @@ import { MobileShell } from '../../components/layout/MobileShell';
 import { NetworkBanner } from '../../components/feedback/NetworkBanner';
 import { LoadingState } from '../../components/feedback/LoadingState';
 import { ErrorState } from '../../components/feedback/ErrorState';
-import { useConsumeCoupon, useCoupon } from '../../features/coupons/useCoupon';
+import { useCoupons } from '../../features/coupons/useCoupon';
+import type { CouponStatus } from '../../features/coupons/types';
 
-function statusText(status: 'available' | 'used' | 'expired' | 'invalid') {
+function statusText(status: CouponStatus) {
   switch (status) {
     case 'available':
       return '可使用';
@@ -20,28 +21,44 @@ function statusText(status: 'available' | 'used' | 'expired' | 'invalid') {
 
 export function CouponPage() {
   const navigate = useNavigate();
-  const query = useCoupon();
-  const mutation = useConsumeCoupon();
+  const query = useCoupons();
 
   return (
-    <MobileShell
-      title="優惠券頁"
-      actions={<button type="button" className="primary-button" disabled={!query.data || query.data.status !== 'available' || mutation.isPending} onClick={async () => { await mutation.mutateAsync(); void query.refetch(); }}>{mutation.isPending ? '使用中…' : '確認使用優惠券'}</button>}
-    >
+    <MobileShell title="優惠券列表頁">
       <NetworkBanner />
       {query.isLoading ? <LoadingState message="正在讀取優惠券…" /> : null}
       {query.error ? <ErrorState message={(query.error as Error).message} onRetry={() => void query.refetch()} /> : null}
       {query.data ? (
-        <div className="coupon-card accent-card">
-          <strong>{query.data.title}</strong>
-          <p>適用商家：{query.data.merchant}</p>
-          <p>有效期限：{query.data.expiresAt}</p>
-          <p><span className="coupon-status">{statusText(query.data.status)}</span></p>
-          <p>{query.data.usageText}</p>
-        </div>
+        query.data.length > 0 ? (
+          <div className="coupon-list">
+            {query.data.map((coupon) => (
+              <div key={coupon.id} className="coupon-card accent-card">
+                <strong>{coupon.title}</strong>
+                <div className="coupon-meta">
+                  <p>適用商家：{coupon.merchant || '店家資訊缺漏'}</p>
+                  <p>有效期限：{coupon.expiresAt}</p>
+                  <p>
+                    <span className={`coupon-status ${coupon.status}`}>{statusText(coupon.status)}</span>
+                  </p>
+                  <p>{coupon.usageText}</p>
+                </div>
+                <div className="coupon-card-actions">
+                  <button
+                    type="button"
+                    className="secondary-button"
+                    onClick={() => navigate(`/coupons/current/${coupon.id}`)}
+                  >
+                    查看詳情
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : <div className="status-card"><strong>目前沒有可顯示的優惠券</strong><p>完成任務後，新的優惠券會出現在這裡。</p></div>
       ) : null}
-      {mutation.data?.ok ? <div className="status-card"><strong>使用狀態</strong><p>{mutation.data.data.message}</p></div> : null}
-      <button type="button" className="text-button" onClick={() => navigate('/quest/current')}>返回任務頁</button>
+      <button type="button" className="text-button" onClick={() => navigate('/quest/current')}>
+        返回任務頁
+      </button>
     </MobileShell>
   );
 }
