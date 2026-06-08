@@ -22,6 +22,17 @@ public class GlobalExceptionHandler {
                 ));
     }
 
+    @ExceptionHandler(QuestException.class)
+    public ResponseEntity<ApiErrorResponse> handleQuestException(QuestException exception, HttpServletRequest request) {
+        return ResponseEntity.status(exception.getHttpStatus())
+                .body(new ApiErrorResponse(
+                        exception.getErrorCode().name(),
+                        exception.getMessage(),
+                        OffsetDateTime.now(),
+                        request.getRequestURI()
+                ));
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiErrorResponse> handleValidationException(MethodArgumentNotValidException exception,
                                                                       HttpServletRequest request) {

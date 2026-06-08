@@ -1,0 +1,12 @@
+package nutc.sot.farm_quest.exception;
+
+public enum QuestErrorCode {
+    GAME_NOT_FOUND,
+    QUEST_NOT_FOUND,
+    QUEST_NOT_AVAILABLE,
+    QUEST_NOT_STARTED,
+    LOCATION_REQUIRED,
+    LOCATION_ACCURACY_TOO_LOW,
+    LOCATION_TOO_FAR,
+    GPS_PERMISSION_REQUIRED
+}
