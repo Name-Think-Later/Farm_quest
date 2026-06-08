@@ -11,8 +11,8 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "quest_progress")
-public class QuestProgressEntity {
+@Table(name = "ai_riddle_conversation")
+public class AiRiddleConversationEntity {
 
     @Id
     private UUID id;
@@ -32,24 +32,17 @@ public class QuestProgressEntity {
     @Column(nullable = false, length = 32)
     private String status;
 
-    @Column(name = "started_at")
+    @Column(name = "started_at", nullable = false)
     private OffsetDateTime startedAt;
-
-    @Column(name = "location_verified_at")
-    private OffsetDateTime locationVerifiedAt;
 
     @Column(name = "completed_at")
     private OffsetDateTime completedAt;
 
-    @Column(name = "last_hint_level", nullable = false)
-    private Integer lastHintLevel;
+    @Column(name = "closed_at")
+    private OffsetDateTime closedAt;
 
-    @Column(name = "attempt_count", nullable = false)
-    private Integer attemptCount;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "last_ai_conversation_id")
-    private AiRiddleConversationEntity lastAiConversation;
+    @Column(name = "last_message_at")
+    private OffsetDateTime lastMessageAt;
 
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt;
@@ -69,16 +62,12 @@ public class QuestProgressEntity {
     public void setStatus(String status) { this.status = status; }
     public OffsetDateTime getStartedAt() { return startedAt; }
     public void setStartedAt(OffsetDateTime startedAt) { this.startedAt = startedAt; }
-    public OffsetDateTime getLocationVerifiedAt() { return locationVerifiedAt; }
-    public void setLocationVerifiedAt(OffsetDateTime locationVerifiedAt) { this.locationVerifiedAt = locationVerifiedAt; }
     public OffsetDateTime getCompletedAt() { return completedAt; }
     public void setCompletedAt(OffsetDateTime completedAt) { this.completedAt = completedAt; }
-    public Integer getLastHintLevel() { return lastHintLevel; }
-    public void setLastHintLevel(Integer lastHintLevel) { this.lastHintLevel = lastHintLevel; }
-    public Integer getAttemptCount() { return attemptCount; }
-    public void setAttemptCount(Integer attemptCount) { this.attemptCount = attemptCount; }
-    public AiRiddleConversationEntity getLastAiConversation() { return lastAiConversation; }
-    public void setLastAiConversation(AiRiddleConversationEntity lastAiConversation) { this.lastAiConversation = lastAiConversation; }
+    public OffsetDateTime getClosedAt() { return closedAt; }
+    public void setClosedAt(OffsetDateTime closedAt) { this.closedAt = closedAt; }
+    public OffsetDateTime getLastMessageAt() { return lastMessageAt; }
+    public void setLastMessageAt(OffsetDateTime lastMessageAt) { this.lastMessageAt = lastMessageAt; }
     public OffsetDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(OffsetDateTime createdAt) { this.createdAt = createdAt; }
     public OffsetDateTime getUpdatedAt() { return updatedAt; }
