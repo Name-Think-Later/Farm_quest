@@ -18,6 +18,6 @@ export function useNetworkStatus() {
 
   return {
     isOnline,
-    label: isOnline ? '已連線' : '目前離線，部分功能需要重新連線後才能使用。',
+    label: isOnline ? '' : '目前網路不穩，部分功能可能需要重新連線後才能使用。',
   };
 }

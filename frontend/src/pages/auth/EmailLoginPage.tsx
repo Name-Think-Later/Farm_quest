@@ -38,7 +38,6 @@ export function EmailLoginPage() {
   return (
     <MobileShell
       title="遊客 Email 登入"
-      description="Email 用於登入、領券資格與防止優惠券濫用。完成驗證後才能進入遊戲。"
       actions={
         <button type="submit" form="email-login-form" className="primary-button" disabled={mutation.isPending || Boolean(emailError) || !email}>
           {mutation.isPending ? '送出中…' : '送出 OTP 驗證碼'}

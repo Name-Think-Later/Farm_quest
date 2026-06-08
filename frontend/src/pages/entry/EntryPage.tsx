@@ -9,7 +9,6 @@ import { useSessionStore } from '../../features/session/sessionStore';
 
 export function EntryPage() {
   const navigate = useNavigate();
-  const markInvalidSession = useSessionStore((state) => state.markInvalidSession);
   const resetSession = useSessionStore((state) => state.resetSession);
 
   const entryQuery = useQuery({
@@ -42,42 +41,30 @@ export function EntryPage() {
   return (
     <MobileShell
       title={entry?.name ?? '農遊謎走'}
-      description={entry?.description ?? '掃描入口後開始遊戲。'}
       actions={
-        <div className="inline-row">
-          <button
-            type="button"
-            className="secondary-button"
-            onClick={() => {
-              markInvalidSession();
-              void stateQuery.refetch();
-            }}
-          >
-            模擬 token 無效
-          </button>
-          <button
-            type="button"
-            className="primary-button"
-            onClick={() => {
-              if (!state) return;
-              if (state.invalidSession) {
-                resetSession();
-              }
-              navigate(state.nextRoute);
-            }}
-          >
-            {state?.ctaLabel ?? '開始'}
-          </button>
-        </div>
+        <button
+          type="button"
+          className="primary-button"
+          onClick={() => {
+            if (!state) return;
+            if (state.invalidSession) {
+              resetSession();
+            }
+            navigate(state.nextRoute);
+          }}
+        >
+          {state?.ctaLabel ?? '開始'}
+        </button>
       }
     >
       <NetworkBanner />
       {isLoading ? <LoadingState message="正在載入遊戲入口資訊…" /> : null}
       {error ? <ErrorState message={(error as Error).message} onRetry={() => { void entryQuery.refetch(); void stateQuery.refetch(); }} /> : null}
       {entry ? (
-        <div className="section-card">
-          <strong>開始前提醒</strong>
-          <p>{entry.networkHint}</p>
+        <div className="section-card primary-feature-card">
+          <p className="section-kicker">開始前提醒</p>
+          <strong className="feature-title">準備出發</strong>
+          <p className="feature-copy">{entry.networkHint}</p>
         </div>
       ) : null}
       {state?.invalidSession ? (
@@ -86,16 +73,10 @@ export function EntryPage() {
           <p>請重新開始遊戲，再次進入 Email 驗證流程。</p>
         </div>
       ) : null}
-      <div className="section-card">
-        <strong>階段 1 定義的頁面流程</strong>
-        <ul className="info-list">
-          <li>1. 入口頁</li>
-          <li>2. Email 登入與 OTP 驗證</li>
-          <li>3. 目前任務頁</li>
-          <li>4. GPS 地點驗證</li>
-          <li>5. AI 對話猜謎</li>
-          <li>6. 優惠券查看與使用</li>
-        </ul>
+      <div className="hero-card page-hero-card">
+        <p className="hero-kicker">走進茶園，跟著提示一步步探索</p>
+        <strong className="feature-title">開始今天的探索旅程</strong>
+        <p className="hero-body">掃描入口後開始戶外探索，依序完成 Email 驗證、GPS 確認、AI 猜謎與優惠券領取。</p>
       </div>
     </MobileShell>
   );

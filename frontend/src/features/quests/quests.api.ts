@@ -5,8 +5,8 @@ export async function fetchCurrentQuest() {
   return ok(await getMockCurrentQuest());
 }
 
-export async function verifyLocation(accuracyMeters: number) {
-  return ok(await verifyMockLocation(accuracyMeters));
+export async function verifyLocation() {
+  return ok(await verifyMockLocation());
 }
 
 export async function sendRiddleMessage(input: string) {

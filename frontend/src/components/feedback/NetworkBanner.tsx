@@ -3,5 +3,9 @@ import { useNetworkStatus } from '../../lib/offline/network';
 export function NetworkBanner() {
   const { isOnline, label } = useNetworkStatus();
 
-  return <div className={`network-banner ${isOnline ? 'online' : 'offline'}`}>{label}</div>;
+  if (isOnline || !label) {
+    return null;
+  }
+
+  return <div className="network-banner offline">{label}</div>;
 }

@@ -25,7 +25,6 @@ export function RiddleChatPage() {
   return (
     <MobileShell
       title="AI 對話式猜謎"
-      description="猜謎、答題與提示都在同一個 AI 對話中完成。答題結果以後端回傳狀態為準。"
       actions={
         <div className="inline-row">
           <button type="button" className="secondary-button" onClick={() => setInput('給我提示')}>快速填入提示需求</button>
@@ -34,19 +33,17 @@ export function RiddleChatPage() {
       }
     >
       <NetworkBanner />
-      <div className="section-card">
-        <strong>任務提示</strong>
-        <p>你已通過地點驗證，現在可以直接回答「高山茶」，或先向 AI 詢問提示。</p>
-      </div>
-      <div className="chat-log">
+      <div className="chat-log line-chat-log">
         {chatMessages.map((message) => (
-          <div key={message.id} className={`chat-message ${message.role}`}>
-            <strong>{message.role === 'ai' ? 'AI NPC' : '你'}</strong>
-            <p>{message.content}</p>
+          <div key={message.id} className={`chat-row ${message.role}`}>
+            <div className={`chat-bubble ${message.role}`}>
+              <strong className="chat-speaker">{message.role === 'ai' ? 'AI NPC' : '你'}</strong>
+              <p>{message.content}</p>
+            </div>
           </div>
         ))}
       </div>
-      <form id="chat-form" className="section-card" onSubmit={(event) => void onSubmit(event)}>
+      <form id="chat-form" className="section-card chat-composer-card" onSubmit={(event) => void onSubmit(event)}>
         <div className="field-group">
           <label className="field-label" htmlFor="chat-input">輸入內容</label>
           <textarea id="chat-input" className="textarea-field" rows={4} value={input} onChange={(event) => setInput(event.target.value)} placeholder="輸入答案，或直接詢問提示" />
