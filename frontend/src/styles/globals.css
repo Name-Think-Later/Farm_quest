@@ -93,7 +93,7 @@ p {
   position: sticky;
   bottom: 0;
   padding-bottom: calc(var(--space-4) + env(safe-area-inset-bottom));
-  background: linear-gradient(to top, var(--color-bg), rgba(247, 247, 242, 0.75));
+  background: transparent;
 }
 
 .primary-button,
