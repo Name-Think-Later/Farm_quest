@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface EmailVerificationRepository extends JpaRepository<EmailVerificationEntity, UUID> {
     Optional<EmailVerificationEntity> findFirstByEmailNormalizedAndStatusOrderByRequestedAtDesc(String emailNormalized, String status);
+    Optional<EmailVerificationEntity> findFirstByEmailNormalizedAndStatusAndExpiresAtAfterOrderByRequestedAtDesc(String emailNormalized, String status, OffsetDateTime now);
     List<EmailVerificationEntity> findByEmailNormalizedAndStatus(String emailNormalized, String status);
     long countByEmailNormalizedAndRequestedAtAfter(String emailNormalized, OffsetDateTime requestedAt);
 }
