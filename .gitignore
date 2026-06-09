@@ -39,3 +39,4 @@ frontend/.env.local
 
 /.env
 /.claude/
+/example/

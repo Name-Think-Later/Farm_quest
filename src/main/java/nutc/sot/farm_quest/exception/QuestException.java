@@ -14,4 +14,10 @@ public class QuestException extends RuntimeException {
         this.errorCode = errorCode;
         this.httpStatus = httpStatus;
     }
+
+    public QuestException(QuestErrorCode errorCode, HttpStatus httpStatus, String message, Throwable cause) {
+        super(message, cause);
+        this.errorCode = errorCode;
+        this.httpStatus = httpStatus;
+    }
 }
