@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import type { CouponStatus } from '../coupons/types';
 import { tokenStorage } from './tokenStorage';
 
 export type ChatRole = 'ai' | 'user';
@@ -9,7 +10,10 @@ export type ChatMessage = {
   content: string;
 };
 
-export type CouponStatus = 'available' | 'used' | 'expired' | 'invalid';
+type CouponState = {
+  status: CouponStatus;
+  consumedAt: string | null;
+};
 
 type SessionState = {
   email: string;
@@ -23,8 +27,7 @@ type SessionState = {
   locationMessage: string;
   accuracyMeters: number | null;
   questCompleted: boolean;
-  couponStatus: CouponStatus;
-  couponConsumedAt: string | null;
+  couponStates: Record<string, CouponState>;
   chatMessages: ChatMessage[];
   setEmail: (email: string) => void;
   requestOtp: () => void;
@@ -34,7 +37,7 @@ type SessionState = {
   setLocationResult: (verified: boolean, message: string, accuracyMeters: number | null) => void;
   addChatMessage: (message: ChatMessage) => void;
   completeQuest: () => void;
-  consumeCoupon: () => void;
+  consumeCoupon: (couponId: string) => void;
   resetSession: () => void;
   hydrateFromStorage: () => void;
 };
@@ -46,6 +49,27 @@ const initialChat: ChatMessage[] = [
     content: '歡迎來到第一個景點。你可以直接回答，也可以先向我索取提示。',
   },
 ];
+
+function createInitialCouponStates(): Record<string, CouponState> {
+  return {
+    'coupon-tea-001': {
+      status: 'available',
+      consumedAt: null,
+    },
+    'coupon-dessert-002': {
+      status: 'used',
+      consumedAt: '2026-05-18T09:30:00.000Z',
+    },
+    'coupon-market-003': {
+      status: 'expired',
+      consumedAt: null,
+    },
+    'coupon-gift-004': {
+      status: 'invalid',
+      consumedAt: null,
+    },
+  };
+}
 
 export const useSessionStore = create<SessionState>((set) => ({
   email: '',
@@ -59,8 +83,7 @@ export const useSessionStore = create<SessionState>((set) => ({
   locationMessage: '尚未進行 GPS 驗證。',
   accuracyMeters: null,
   questCompleted: false,
-  couponStatus: 'available',
-  couponConsumedAt: null,
+  couponStates: createInitialCouponStates(),
   chatMessages: initialChat,
   setEmail: (email) => set({ email }),
   requestOtp: () =>
@@ -85,11 +108,23 @@ export const useSessionStore = create<SessionState>((set) => ({
   setLocationResult: (verified, message, accuracyMeters) =>
     set({ locationVerified: verified, locationMessage: message, accuracyMeters }),
   addChatMessage: (message) => set((state) => ({ chatMessages: [...state.chatMessages, message] })),
-  completeQuest: () => set({ questCompleted: true, couponStatus: 'available' }),
-  consumeCoupon: () =>
-    set({
-      couponStatus: 'used',
-      couponConsumedAt: new Date().toISOString(),
+  completeQuest: () => set({ questCompleted: true }),
+  consumeCoupon: (couponId) =>
+    set((state) => {
+      const couponState = state.couponStates[couponId];
+      if (!couponState) {
+        return state;
+      }
+
+      return {
+        couponStates: {
+          ...state.couponStates,
+          [couponId]: {
+            status: 'used',
+            consumedAt: new Date().toISOString(),
+          },
+        },
+      };
     }),
   resetSession: () => {
     tokenStorage.clearToken();
@@ -105,8 +140,7 @@ export const useSessionStore = create<SessionState>((set) => ({
       locationMessage: '尚未進行 GPS 驗證。',
       accuracyMeters: null,
       questCompleted: false,
-      couponStatus: 'available',
-      couponConsumedAt: null,
+      couponStates: createInitialCouponStates(),
       chatMessages: initialChat,
     });
   },

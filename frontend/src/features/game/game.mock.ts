@@ -36,6 +36,6 @@ export async function getMockGameState(): Promise<GameState> {
     hasSession: false,
     invalidSession: false,
     nextRoute: '/auth/email',
-    ctaLabel: '開始遊戲',
+    ctaLabel: '前往 Email 登入',
   };
 }

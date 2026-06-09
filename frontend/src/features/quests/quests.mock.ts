@@ -102,11 +102,13 @@ export async function sendMockRiddleMessage(input: string): Promise<RiddleRespon
 export async function getMockCouponPreview(): Promise<CouponPreview> {
   await new Promise((resolve) => setTimeout(resolve, 120));
   const state = useSessionStore.getState();
+  const previewState = state.couponStates['coupon-tea-001'];
+
   return {
     title: '茶園體驗折價券',
     merchant: '山霧茶屋',
     expiresAt: '2026-12-31 18:00',
-    status: state.couponStatus,
+    status: previewState?.status ?? 'invalid',
     description: '請向店家出示本券內容，店家確認後再由你按下使用按鈕。',
   };
 }

@@ -14,6 +14,7 @@ import { CurrentQuestPage } from '../pages/quest/CurrentQuestPage';
 import { LocationVerifyPage } from '../pages/quest/LocationVerifyPage';
 import { RiddleChatPage } from '../pages/quest/RiddleChatPage';
 import { CouponPage } from '../pages/coupons/CouponPage';
+import { CouponDetailPage } from '../pages/coupons/CouponDetailPage';
 
 function HomeLayout() {
   const { data, isLoading, error, refetch } = useHealthStatus();
@@ -55,7 +56,7 @@ function HomeLayout() {
         <Link className="route-link" to="/quest/current">目前任務頁</Link>
         <Link className="route-link" to="/quest/location">地點驗證頁</Link>
         <Link className="route-link" to="/quest/riddle">AI 對話猜謎頁</Link>
-        <Link className="route-link" to="/coupons/current">優惠券頁</Link>
+        <Link className="route-link" to="/coupons/current">優惠券列表頁</Link>
       </div>
     </MobileShell>
   );
@@ -75,6 +76,7 @@ const router = createBrowserRouter([
   { path: '/quest/location', element: <RequireVerified><LocationVerifyPage /></RequireVerified> },
   { path: '/quest/riddle', element: <RequireVerified><RiddleChatPage /></RequireVerified> },
   { path: '/coupons/current', element: <RequireVerified><CouponPage /></RequireVerified> },
+  { path: '/coupons/current/:couponId', element: <RequireVerified><CouponDetailPage /></RequireVerified> },
 ]);
 
 export function AppRouter() {

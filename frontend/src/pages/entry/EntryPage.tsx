@@ -72,11 +72,16 @@ export function EntryPage() {
           <strong>目前 session 已失效</strong>
           <p>請重新開始遊戲，再次進入 Email 驗證流程。</p>
         </div>
+      ) : state ? (
+        <div className="status-card">
+          <strong>{state.hasSession ? '你可以直接繼續目前任務' : '下一步：先完成 Email 登入'}</strong>
+          <p>{state.hasSession ? '系統已保留你的登入狀態，可直接回到任務流程。' : '登入後才能進入任務、GPS 驗證、AI 猜謎與優惠券流程。'}</p>
+        </div>
       ) : null}
       <div className="hero-card page-hero-card">
         <p className="hero-kicker">走進茶園，跟著提示一步步探索</p>
-        <strong className="feature-title">開始今天的探索旅程</strong>
-        <p className="hero-body">掃描入口後開始戶外探索，依序完成 Email 驗證、GPS 確認、AI 猜謎與優惠券領取。</p>
+        <strong className="feature-title">從登入開始今天的探索旅程</strong>
+        <p className="hero-body">掃描入口後，先完成 Email 登入與 OTP 驗證，再依序進入任務、GPS 驗證、AI 猜謎與優惠券領取。</p>
       </div>
     </MobileShell>
   );
