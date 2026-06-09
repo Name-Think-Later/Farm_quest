@@ -10,6 +10,7 @@ import nutc.sot.farm_quest.persistence.entity.GameEntity;
 import nutc.sot.farm_quest.persistence.entity.QuestEntity;
 import nutc.sot.farm_quest.persistence.entity.QuestProgressEntity;
 import nutc.sot.farm_quest.persistence.entity.VisitorSessionEntity;
+import nutc.sot.farm_quest.persistence.repository.AiRiddleConfigRepository;
 import nutc.sot.farm_quest.persistence.repository.GameRepository;
 import nutc.sot.farm_quest.persistence.repository.QuestRepository;
 import nutc.sot.farm_quest.service.auth.SessionService;
@@ -26,6 +27,7 @@ public class GameService {
     private final QuestRepository questRepository;
     private final SessionService sessionService;
     private final ProgressService progressService;
+    private final AiRiddleConfigRepository aiRiddleConfigRepository;
 
     @Transactional(readOnly = true)
     public GameEntryResponse getActiveGame() {
@@ -48,7 +50,8 @@ public class GameService {
                 .orElseGet(() -> firstQuestProgressOrNull(session));
 
         String progressStatus = currentProgress == null ? "NOT_STARTED" : currentProgress.getStatus();
-        boolean gpsVerified = List.of("LOCATION_VERIFIED", "AI_RIDDLE_STARTED", "COMPLETED").contains(progressStatus);
+        boolean gpsVerified = isGpsVerified(progressStatus);
+        boolean aiRiddleAvailable = isAiRiddleAvailable(currentProgress);
         return new GameStateResponse(
                 session.getGame().getId(),
                 session.getVisitorAccount().getId(),
@@ -56,7 +59,7 @@ public class GameService {
                 currentProgress == null ? null : currentProgress.getQuest().getTitle(),
                 progressStatus,
                 gpsVerified,
-                gpsVerified,
+                aiRiddleAvailable,
                 nextStep(progressStatus)
         );
     }
@@ -71,6 +74,20 @@ public class GameService {
             return null;
         }
         return progressService.findProgress(session.getVisitorAccount().getId(), firstQuest.getId()).orElse(null);
+    }
+
+    private boolean isGpsVerified(String progressStatus) {
+        return List.of("LOCATION_VERIFIED", "AI_RIDDLE_STARTED", "COMPLETED").contains(progressStatus);
+    }
+
+    private boolean isAiRiddleAvailable(QuestProgressEntity progress) {
+        if (progress == null) {
+            return false;
+        }
+        if (!List.of("LOCATION_VERIFIED", "AI_RIDDLE_STARTED").contains(progress.getStatus())) {
+            return false;
+        }
+        return aiRiddleConfigRepository.findByQuest_IdAndStatus(progress.getQuest().getId(), "ACTIVE").isPresent();
     }
 
     private String nextStep(String progressStatus) {

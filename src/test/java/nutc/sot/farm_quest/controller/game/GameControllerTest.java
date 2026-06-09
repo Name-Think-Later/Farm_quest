@@ -63,4 +63,24 @@ class GameControllerTest {
                 .andExpect(jsonPath("$.currentQuestTitle").value("茶園謎題"))
                 .andExpect(jsonPath("$.progressStatus").value("STARTED"));
     }
+
+    @Test
+    void getGameStatePreservesIndependentAiRiddleAvailability() throws Exception {
+        when(gameService.getGameState("session-token")).thenReturn(new GameStateResponse(
+                UUID.fromString("11111111-1111-1111-1111-111111111111"),
+                UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"),
+                UUID.fromString("22222222-2222-2222-2222-222222222222"),
+                "茶園謎題",
+                "LOCATION_VERIFIED",
+                true,
+                false,
+                "AI_RIDDLE_AVAILABLE"
+        ));
+
+        mockMvc.perform(get("/api/game/state")
+                        .header("Authorization", "Bearer session-token"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.gpsVerified").value(true))
+                .andExpect(jsonPath("$.aiRiddleAvailable").value(false));
+    }
 }

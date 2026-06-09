@@ -1,6 +1,7 @@
 package nutc.sot.farm_quest.service.quest;
 
 import java.util.List;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import nutc.sot.farm_quest.exception.QuestErrorCode;
 import nutc.sot.farm_quest.exception.QuestException;
@@ -19,10 +20,21 @@ public class SpringAiVectorStoreService implements VectorStoreService {
     @Override
     public List<Document> search(String query, PromptPolicyService.PromptContext context) {
         try {
-            SearchRequest request = SearchRequest.builder().query(query).topK(4).build();
-            return vectorStore.similaritySearch(request);
+            return vectorStore.similaritySearch(buildSearchRequest(query, context));
         } catch (RuntimeException exception) {
             throw new QuestException(QuestErrorCode.RAG_RETRIEVAL_FAILED, HttpStatus.SERVICE_UNAVAILABLE, "RAG retrieval failed");
         }
+    }
+
+    SearchRequest buildSearchRequest(String query, PromptPolicyService.PromptContext context) {
+        return SearchRequest.builder()
+                .query(query)
+                .topK(4)
+                .filterExpression("gameId == '" + asFilterValue(context.quest().getGame().getId()) + "' && questId == '" + asFilterValue(context.quest().getId()) + "'")
+                .build();
+    }
+
+    private String asFilterValue(UUID value) {
+        return value.toString();
     }
 }
