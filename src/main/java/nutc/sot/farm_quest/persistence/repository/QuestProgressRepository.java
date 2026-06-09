@@ -12,4 +12,5 @@ public interface QuestProgressRepository extends JpaRepository<QuestProgressEnti
     List<QuestProgressEntity> findByVisitorAccount_IdOrderByUpdatedAtDesc(UUID visitorAccountId);
     Optional<QuestProgressEntity> findFirstByVisitorAccount_IdAndGame_IdAndStatusOrderByUpdatedAtDesc(UUID visitorAccountId, UUID gameId, String status);
     List<QuestProgressEntity> findByVisitorAccount_IdAndStatusInOrderByQuest_SortOrderAsc(UUID visitorAccountId, Collection<String> statuses);
+    List<QuestProgressEntity> findByGame_IdAndStatusOrderByCompletedAtDesc(UUID gameId, String status);
 }

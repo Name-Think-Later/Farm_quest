@@ -10,4 +10,6 @@ public interface CouponUsageRepository extends JpaRepository<CouponUsageEntity, 
     boolean existsByCoupon_Id(UUID couponId);
     Optional<CouponUsageEntity> findByCoupon_Id(UUID couponId);
     List<CouponUsageEntity> findByVisitorAccount_IdOrderByUsedAtDesc(UUID visitorAccountId);
+    List<CouponUsageEntity> findByCoupon_CouponCampaign_Game_IdOrderByUsedAtDesc(UUID gameId);
+    List<CouponUsageEntity> findByCoupon_Quest_IdOrderByUsedAtDesc(UUID questId);
 }

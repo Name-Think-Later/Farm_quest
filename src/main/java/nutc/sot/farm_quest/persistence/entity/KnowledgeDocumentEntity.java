@@ -33,6 +33,9 @@ public class KnowledgeDocumentEntity {
     @Column(nullable = false)
     private String title;
 
+    @Column(name = "content")
+    private String content;
+
     @Column(nullable = false)
     private String source;
 
@@ -64,6 +67,8 @@ public class KnowledgeDocumentEntity {
     public void setLocation(LocationEntity location) { this.location = location; }
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
+    public String getContent() { return content; }
+    public void setContent(String content) { this.content = content; }
     public String getSource() { return source; }
     public void setSource(String source) { this.source = source; }
     public String getSpoilerLevel() { return spoilerLevel; }

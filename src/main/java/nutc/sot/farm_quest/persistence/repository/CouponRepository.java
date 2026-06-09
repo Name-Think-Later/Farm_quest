@@ -16,6 +16,9 @@ public interface CouponRepository extends JpaRepository<CouponEntity, UUID> {
     List<CouponEntity> findByVisitorAccount_IdOrderByIssuedAtDesc(UUID visitorAccountId);
     Optional<CouponEntity> findByIdAndVisitorAccount_Id(UUID id, UUID visitorAccountId);
     List<CouponEntity> findByVisitorAccount_IdAndStatusAndExpiresAtAfterOrderByIssuedAtDesc(UUID visitorAccountId, String status, OffsetDateTime now);
+    List<CouponEntity> findByGame_IdOrderByIssuedAtDesc(UUID gameId);
+    List<CouponEntity> findByGame_IdAndStatusOrderByIssuedAtDesc(UUID gameId, String status);
+    List<CouponEntity> findByQuest_IdOrderByIssuedAtDesc(UUID questId);
 
     @Modifying
     @Query("""
