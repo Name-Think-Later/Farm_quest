@@ -7,7 +7,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -39,6 +38,12 @@ public class CouponCampaignEntity {
     @Column(name = "description")
     private String description;
 
+    @Column(name = "valid_from")
+    private OffsetDateTime validFrom;
+
+    @Column(name = "valid_until")
+    private OffsetDateTime validUntil;
+
     @Column(nullable = false, length = 32)
     private String status;
 
@@ -62,6 +67,10 @@ public class CouponCampaignEntity {
     public void setTitle(String title) { this.title = title; }
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
+    public OffsetDateTime getValidFrom() { return validFrom; }
+    public void setValidFrom(OffsetDateTime validFrom) { this.validFrom = validFrom; }
+    public OffsetDateTime getValidUntil() { return validUntil; }
+    public void setValidUntil(OffsetDateTime validUntil) { this.validUntil = validUntil; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
     public OffsetDateTime getCreatedAt() { return createdAt; }
