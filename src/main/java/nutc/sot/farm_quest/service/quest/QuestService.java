@@ -101,7 +101,7 @@ public class QuestService {
         );
     }
 
-    private QuestEntity requireAvailableQuest(VisitorSessionEntity session, UUID questId) {
+    QuestEntity requireAvailableQuest(VisitorSessionEntity session, UUID questId) {
         QuestEntity quest = questRepository.findById(questId)
                 .filter(item -> item.getGame().getId().equals(session.getGame().getId()))
                 .orElseThrow(() -> new QuestException(QuestErrorCode.QUEST_NOT_FOUND, HttpStatus.NOT_FOUND, "Quest not found"));
@@ -148,7 +148,7 @@ public class QuestService {
                 .orElse(false);
     }
 
-    private String nextStep(String progressStatus) {
+    String nextStep(String progressStatus) {
         return switch (progressStatus) {
             case "LOCATION_VERIFIED", "AI_RIDDLE_STARTED", "COMPLETED" -> "AI_RIDDLE_AVAILABLE";
             case "STARTED" -> "VERIFY_LOCATION";

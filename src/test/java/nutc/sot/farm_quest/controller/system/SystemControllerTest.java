@@ -53,7 +53,8 @@ class SystemControllerTest {
                         new DependencyItemResponse("PostgreSQL", "UP", "Connection successful"),
                         new DependencyItemResponse("Redis", "DOWN", "Connection refused"),
                         new DependencyItemResponse("Qdrant", "UP", "Collection reachable"),
-                        new DependencyItemResponse("Spring AI Provider", "MISSING", "Provider configuration incomplete")
+                        new DependencyItemResponse("AI Chat Model", "CONFIGURED", "Provider=openai, model=gpt-4o-mini"),
+                        new DependencyItemResponse("AI Embedding Model", "MISSING", "Embedding model configuration incomplete")
                 )
         ));
 
@@ -61,8 +62,32 @@ class SystemControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.status").value("DOWN"))
-                .andExpect(jsonPath("$.dependencies.length()").value(4))
+                .andExpect(jsonPath("$.dependencies.length()").value(5))
                 .andExpect(jsonPath("$.dependencies[1].name").value("Redis"))
-                .andExpect(jsonPath("$.dependencies[1].status").value("DOWN"));
+                .andExpect(jsonPath("$.dependencies[1].status").value("DOWN"))
+                .andExpect(jsonPath("$.dependencies[3].name").value("AI Chat Model"))
+                .andExpect(jsonPath("$.dependencies[4].name").value("AI Embedding Model"));
+    }
+
+    @Test
+    void probeDependenciesReturnsContract() throws Exception {
+        when(dependencyCheckService.probeAiDependencies()).thenReturn(new DependencyStatusResponse(
+                "UP",
+                OffsetDateTime.parse("2026-06-07T10:15:30+08:00"),
+                List.of(
+                        new DependencyItemResponse("AI Chat Model", "UP", "Provider=openai, model=gpt-4o-mini"),
+                        new DependencyItemResponse("AI Embedding Model", "UP", "Provider=openai, model=bge-m3")
+                )
+        ));
+
+        mockMvc.perform(get("/api/system/dependencies/probe"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.status").value("UP"))
+                .andExpect(jsonPath("$.dependencies.length()").value(2))
+                .andExpect(jsonPath("$.dependencies[0].name").value("AI Chat Model"))
+                .andExpect(jsonPath("$.dependencies[0].status").value("UP"))
+                .andExpect(jsonPath("$.dependencies[1].name").value("AI Embedding Model"))
+                .andExpect(jsonPath("$.dependencies[1].status").value("UP"));
     }
 }

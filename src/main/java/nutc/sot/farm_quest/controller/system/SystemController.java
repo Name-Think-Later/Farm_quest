@@ -27,4 +27,9 @@ public class SystemController {
     public ResponseEntity<DependencyStatusResponse> getDependencies() {
         return ResponseEntity.ok(dependencyCheckService.checkDependencies());
     }
+
+    @GetMapping("/dependencies/probe")
+    public ResponseEntity<DependencyStatusResponse> probeDependencies() {
+        return ResponseEntity.ok(dependencyCheckService.probeAiDependencies());
+    }
 }

@@ -1,6 +1,7 @@
 package nutc.sot.farm_quest.infrastructure.qdrant;
 
 import nutc.sot.farm_quest.config.QdrantProperties;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -20,7 +21,7 @@ public class QdrantCollectionInitializer implements ApplicationRunner {
     private final RestClient restClient;
     private final QdrantProperties properties;
 
-    public QdrantCollectionInitializer(RestClient restClient, QdrantProperties properties) {
+    public QdrantCollectionInitializer(@Qualifier("qdrantRestClient") RestClient restClient, QdrantProperties properties) {
         this.restClient = restClient;
         this.properties = properties;
     }

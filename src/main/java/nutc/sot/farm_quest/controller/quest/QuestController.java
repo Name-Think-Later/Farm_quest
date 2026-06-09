@@ -4,12 +4,16 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import nutc.sot.farm_quest.dto.quest.AiRiddleConversationResponse;
+import nutc.sot.farm_quest.dto.quest.AiRiddleMessageRequest;
+import nutc.sot.farm_quest.dto.quest.AiRiddleMessageResponse;
 import nutc.sot.farm_quest.dto.quest.LocationHintResponse;
 import nutc.sot.farm_quest.dto.quest.LocationVerificationRequest;
 import nutc.sot.farm_quest.dto.quest.LocationVerificationResponse;
 import nutc.sot.farm_quest.dto.quest.QuestDetailResponse;
 import nutc.sot.farm_quest.dto.quest.QuestListResponse;
 import nutc.sot.farm_quest.dto.quest.StartQuestResponse;
+import nutc.sot.farm_quest.service.quest.AiRiddleService;
 import nutc.sot.farm_quest.service.quest.QuestService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,6 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class QuestController {
 
     private final QuestService questService;
+    private final AiRiddleService aiRiddleService;
 
     @GetMapping
     public ResponseEntity<QuestListResponse> getQuests(HttpServletRequest request) {
@@ -51,6 +56,19 @@ public class QuestController {
                                                                        @Valid @RequestBody LocationVerificationRequest request,
                                                                        HttpServletRequest httpServletRequest) {
         return ResponseEntity.ok(questService.verifyLocation(extractBearerToken(httpServletRequest), questId, request));
+    }
+
+    @GetMapping("/{questId}/ai-riddle/messages")
+    public ResponseEntity<AiRiddleConversationResponse> getAiRiddleMessages(@PathVariable UUID questId,
+                                                                            HttpServletRequest request) {
+        return ResponseEntity.ok(aiRiddleService.getConversation(extractBearerToken(request), questId));
+    }
+
+    @PostMapping("/{questId}/ai-riddle/messages")
+    public ResponseEntity<AiRiddleMessageResponse> sendAiRiddleMessage(@PathVariable UUID questId,
+                                                                       @Valid @RequestBody AiRiddleMessageRequest request,
+                                                                       HttpServletRequest httpServletRequest) {
+        return ResponseEntity.ok(aiRiddleService.sendMessage(extractBearerToken(httpServletRequest), questId, request));
     }
 
     private String extractBearerToken(HttpServletRequest request) {

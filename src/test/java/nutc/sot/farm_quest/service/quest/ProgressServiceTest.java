@@ -4,6 +4,7 @@ import java.time.OffsetDateTime;
 import java.util.Optional;
 import java.util.UUID;
 import nutc.sot.farm_quest.exception.QuestException;
+import nutc.sot.farm_quest.persistence.entity.AiRiddleConversationEntity;
 import nutc.sot.farm_quest.persistence.entity.GameEntity;
 import nutc.sot.farm_quest.persistence.entity.QuestEntity;
 import nutc.sot.farm_quest.persistence.entity.QuestProgressEntity;
@@ -55,6 +56,31 @@ class ProgressServiceTest {
                 .hasMessage("Quest must be started before GPS verification");
     }
 
+    @Test
+    void markAiRiddleStartedTransitionsProgress() {
+        QuestProgressEntity progress = existingProgress("LOCATION_VERIFIED");
+        AiRiddleConversationEntity conversation = conversation();
+        when(questProgressRepository.save(any(QuestProgressEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        QuestProgressEntity result = progressService.markAiRiddleStarted(progress, conversation);
+
+        assertThat(result.getStatus()).isEqualTo("AI_RIDDLE_STARTED");
+        assertThat(result.getLastAiConversation()).isEqualTo(conversation);
+    }
+
+    @Test
+    void markCompletedFromAiRiddleTransitionsProgress() {
+        QuestProgressEntity progress = existingProgress("AI_RIDDLE_STARTED");
+        AiRiddleConversationEntity conversation = conversation();
+        when(questProgressRepository.save(any(QuestProgressEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        QuestProgressEntity result = progressService.markCompletedFromAiRiddle(progress, conversation, OffsetDateTime.now());
+
+        assertThat(result.getStatus()).isEqualTo("COMPLETED");
+        assertThat(result.getCompletedAt()).isNotNull();
+        assertThat(result.getLastAiConversation()).isEqualTo(conversation);
+    }
+
     private VisitorAccountEntity visitorAccount() {
         GameEntity game = new GameEntity();
         game.setId(UUID.fromString("11111111-1111-1111-1111-111111111111"));
@@ -71,6 +97,12 @@ class ProgressServiceTest {
         quest.setGame(game);
         quest.setStatus("ACTIVE");
         return quest;
+    }
+
+    private AiRiddleConversationEntity conversation() {
+        AiRiddleConversationEntity conversation = new AiRiddleConversationEntity();
+        conversation.setId(UUID.fromString("77777777-7777-7777-7777-777777777777"));
+        return conversation;
     }
 
     private QuestProgressEntity existingProgress(String status) {

@@ -64,6 +64,36 @@ public class ProgressService {
         return progress;
     }
 
+    @Transactional
+    public QuestProgressEntity markAiRiddleStarted(QuestProgressEntity progress, nutc.sot.farm_quest.persistence.entity.AiRiddleConversationEntity conversation) {
+        if (!"LOCATION_VERIFIED".equals(progress.getStatus()) && !"AI_RIDDLE_STARTED".equals(progress.getStatus())) {
+            throw new QuestException(QuestErrorCode.QUEST_LOCATION_NOT_VERIFIED, HttpStatus.BAD_REQUEST, "Quest location is not verified");
+        }
+        progress.setLastAiConversation(conversation);
+        if (!"AI_RIDDLE_STARTED".equals(progress.getStatus())) {
+            progress.setStatus("AI_RIDDLE_STARTED");
+        }
+        progress.setUpdatedAt(OffsetDateTime.now());
+        return questProgressRepository.save(progress);
+    }
+
+    @Transactional
+    public QuestProgressEntity markCompletedFromAiRiddle(QuestProgressEntity progress,
+                                                         nutc.sot.farm_quest.persistence.entity.AiRiddleConversationEntity conversation,
+                                                         OffsetDateTime completedAt) {
+        if ("COMPLETED".equals(progress.getStatus())) {
+            return progress;
+        }
+        if (!"LOCATION_VERIFIED".equals(progress.getStatus()) && !"AI_RIDDLE_STARTED".equals(progress.getStatus())) {
+            throw new QuestException(QuestErrorCode.QUEST_LOCATION_NOT_VERIFIED, HttpStatus.BAD_REQUEST, "Quest location is not verified");
+        }
+        progress.setStatus("COMPLETED");
+        progress.setCompletedAt(completedAt);
+        progress.setLastAiConversation(conversation);
+        progress.setUpdatedAt(completedAt);
+        return questProgressRepository.save(progress);
+    }
+
     private QuestProgressEntity createProgress(VisitorAccountEntity visitorAccount, QuestEntity quest) {
         OffsetDateTime now = OffsetDateTime.now();
         QuestProgressEntity progress = new QuestProgressEntity();

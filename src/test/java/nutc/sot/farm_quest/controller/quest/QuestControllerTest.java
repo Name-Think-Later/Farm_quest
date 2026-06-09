@@ -3,6 +3,10 @@ package nutc.sot.farm_quest.controller.quest;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
+import nutc.sot.farm_quest.dto.quest.AiRiddleConversationResponse;
+import nutc.sot.farm_quest.dto.quest.AiRiddleMessageItem;
+import nutc.sot.farm_quest.dto.quest.AiRiddleMessageRequest;
+import nutc.sot.farm_quest.dto.quest.AiRiddleMessageResponse;
 import nutc.sot.farm_quest.dto.quest.LocationHintResponse;
 import nutc.sot.farm_quest.dto.quest.LocationVerificationRequest;
 import nutc.sot.farm_quest.dto.quest.LocationVerificationResponse;
@@ -14,6 +18,7 @@ import nutc.sot.farm_quest.exception.AuthException;
 import nutc.sot.farm_quest.exception.GlobalExceptionHandler;
 import nutc.sot.farm_quest.exception.QuestErrorCode;
 import nutc.sot.farm_quest.exception.QuestException;
+import nutc.sot.farm_quest.service.quest.AiRiddleService;
 import nutc.sot.farm_quest.service.quest.QuestService;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
@@ -34,8 +39,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class QuestControllerTest {
 
     private final QuestService questService = mock(QuestService.class);
+    private final AiRiddleService aiRiddleService = mock(AiRiddleService.class);
     private final MockMvc mockMvc = MockMvcBuilders
-            .standaloneSetup(new QuestController(questService))
+            .standaloneSetup(new QuestController(questService, aiRiddleService))
             .setControllerAdvice(new GlobalExceptionHandler())
             .build();
 
@@ -186,5 +192,72 @@ class QuestControllerTest {
                                 """))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("LOCATION_TOO_FAR"));
+    }
+
+    @Test
+    void getAiRiddleMessagesReturnsContract() throws Exception {
+        UUID questId = UUID.fromString("22222222-2222-2222-2222-222222222222");
+        when(aiRiddleService.getConversation("session-token", questId)).thenReturn(new AiRiddleConversationResponse(
+                questId,
+                UUID.fromString("77777777-7777-7777-7777-777777777777"),
+                "AI_RIDDLE_STARTED",
+                false,
+                "AI_RIDDLE_AVAILABLE",
+                List.of(new AiRiddleMessageItem(
+                        UUID.fromString("88888888-8888-8888-8888-888888888888"),
+                        "ASSISTANT",
+                        "先從茶園特色開始想想看。",
+                        false,
+                        OffsetDateTime.parse("2026-06-07T10:15:00+08:00")
+                ))
+        ));
+
+        mockMvc.perform(get("/api/quests/{questId}/ai-riddle/messages", questId)
+                        .header("Authorization", "Bearer session-token"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.conversationId").value("77777777-7777-7777-7777-777777777777"))
+                .andExpect(jsonPath("$.messages.length()").value(1));
+    }
+
+    @Test
+    void sendAiRiddleMessageReturnsContract() throws Exception {
+        UUID questId = UUID.fromString("22222222-2222-2222-2222-222222222222");
+        when(aiRiddleService.sendMessage(eq("session-token"), eq(questId), any(AiRiddleMessageRequest.class)))
+                .thenReturn(new AiRiddleMessageResponse(
+                        questId,
+                        UUID.fromString("77777777-7777-7777-7777-777777777777"),
+                        "AI_RIDDLE_STARTED",
+                        "請再想想與茶香有關的線索。",
+                        false,
+                        false,
+                        "AI_RIDDLE_AVAILABLE",
+                        "請依照線索繼續作答。"
+                ));
+
+        mockMvc.perform(post("/api/quests/{questId}/ai-riddle/messages", questId)
+                        .header("Authorization", "Bearer session-token")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"content":"提示一下"}
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.replyContent").value("請再想想與茶香有關的線索。"))
+                .andExpect(jsonPath("$.questCompleted").value(false));
+    }
+
+    @Test
+    void sendAiRiddleMessageReturnsCompletedError() throws Exception {
+        UUID questId = UUID.fromString("22222222-2222-2222-2222-222222222222");
+        when(aiRiddleService.sendMessage(eq("session-token"), eq(questId), any(AiRiddleMessageRequest.class)))
+                .thenThrow(new QuestException(QuestErrorCode.AI_RIDDLE_ALREADY_COMPLETED, HttpStatus.BAD_REQUEST, "AI riddle is already completed"));
+
+        mockMvc.perform(post("/api/quests/{questId}/ai-riddle/messages", questId)
+                        .header("Authorization", "Bearer session-token")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"content":"答案是茶"}
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("AI_RIDDLE_ALREADY_COMPLETED"));
     }
 }

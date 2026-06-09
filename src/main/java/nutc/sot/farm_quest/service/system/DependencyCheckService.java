@@ -9,6 +9,9 @@ import lombok.RequiredArgsConstructor;
 import nutc.sot.farm_quest.config.QdrantProperties;
 import nutc.sot.farm_quest.dto.system.DependencyItemResponse;
 import nutc.sot.farm_quest.dto.system.DependencyStatusResponse;
+import nutc.sot.farm_quest.service.quest.EmbeddingService;
+import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.env.Environment;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.stereotype.Service;
@@ -27,23 +30,36 @@ public class DependencyCheckService {
     private final DataSource dataSource;
     private final RedisConnectionFactory redisConnectionFactory;
     private final QdrantProperties qdrantProperties;
+    @Qualifier("qdrantRestClient")
     private final RestClient qdrantRestClient;
     private final Environment environment;
+    private final ChatClient chatClient;
+    private final EmbeddingService embeddingService;
 
     public DependencyStatusResponse checkDependencies() {
         List<DependencyItemResponse> dependencies = List.of(
                 checkPostgreSql(),
                 checkRedis(),
                 checkQdrant(),
-                checkAiProvider()
+                checkAiChatModel(),
+                checkAiEmbeddingModel()
         );
 
-        boolean allHealthy = dependencies.stream()
-                .map(DependencyItemResponse::status)
-                .allMatch(status -> STATUS_UP.equals(status) || STATUS_CONFIGURED.equals(status));
+        return new DependencyStatusResponse(
+                overallStatus(dependencies, STATUS_UP, STATUS_CONFIGURED),
+                OffsetDateTime.now(),
+                dependencies
+        );
+    }
+
+    public DependencyStatusResponse probeAiDependencies() {
+        List<DependencyItemResponse> dependencies = List.of(
+                probeAiChatModel(),
+                probeAiEmbeddingModel()
+        );
 
         return new DependencyStatusResponse(
-                allHealthy ? STATUS_UP : STATUS_DOWN,
+                overallStatus(dependencies, STATUS_UP),
                 OffsetDateTime.now(),
                 dependencies
         );
@@ -86,26 +102,133 @@ public class DependencyCheckService {
         }
     }
 
-    private DependencyItemResponse checkAiProvider() {
-        boolean hasChatProvider = StringUtils.hasText(firstPresent(
-                environment.getProperty("spring.ai.chat.provider"),
-                environment.getProperty("SPRING_AI_CHAT_PROVIDER")
-        ));
-        boolean hasEmbeddingProvider = StringUtils.hasText(firstPresent(
-                environment.getProperty("spring.ai.embedding.provider"),
-                environment.getProperty("SPRING_AI_EMBEDDING_PROVIDER")
-        ));
-        boolean hasAnyApiKey = StringUtils.hasText(firstPresent(
-                environment.getProperty("llm.api-key"),
-                environment.getProperty("LLM_API_KEY"),
-                environment.getProperty("embedding.api-key"),
-                environment.getProperty("EMBEDDING_API_KEY")
-        ));
+    private DependencyItemResponse checkAiChatModel() {
+        String provider = chatProvider();
+        String model = chatModel();
+        String apiKey = chatApiKey();
+        String baseUrl = chatBaseUrl();
 
-        if (hasChatProvider && hasEmbeddingProvider && hasAnyApiKey) {
-            return new DependencyItemResponse("Spring AI Provider", STATUS_CONFIGURED, "Provider configuration present");
+        if (StringUtils.hasText(provider) && StringUtils.hasText(model) && StringUtils.hasText(apiKey) && StringUtils.hasText(baseUrl)) {
+            return new DependencyItemResponse("AI Chat Model", STATUS_CONFIGURED, "Provider=" + provider + ", model=" + model);
         }
-        return new DependencyItemResponse("Spring AI Provider", STATUS_MISSING, "Provider configuration incomplete");
+        return new DependencyItemResponse("AI Chat Model", STATUS_MISSING, "Chat model configuration incomplete");
+    }
+
+    private DependencyItemResponse checkAiEmbeddingModel() {
+        String provider = embeddingProvider();
+        String model = embeddingModel();
+        String apiKey = embeddingApiKey();
+        String baseUrl = embeddingBaseUrl();
+
+        if (StringUtils.hasText(provider) && StringUtils.hasText(model) && StringUtils.hasText(apiKey) && StringUtils.hasText(baseUrl)) {
+            return new DependencyItemResponse("AI Embedding Model", STATUS_CONFIGURED, "Provider=" + provider + ", model=" + model);
+        }
+        return new DependencyItemResponse("AI Embedding Model", STATUS_MISSING, "Embedding model configuration incomplete");
+    }
+
+    private DependencyItemResponse probeAiChatModel() {
+        DependencyItemResponse configured = checkAiChatModel();
+        if (!STATUS_CONFIGURED.equals(configured.status())) {
+            return new DependencyItemResponse("AI Chat Model", STATUS_MISSING, configured.message());
+        }
+
+        try {
+            String response = chatClient.prompt()
+                    .user("reply with ok")
+                    .call()
+                    .content();
+            if (StringUtils.hasText(response)) {
+                return new DependencyItemResponse("AI Chat Model", STATUS_UP, "Provider=" + chatProvider() + ", model=" + chatModel());
+            }
+            return new DependencyItemResponse("AI Chat Model", STATUS_DOWN, "Chat model returned empty content");
+        } catch (RuntimeException ex) {
+            return new DependencyItemResponse("AI Chat Model", STATUS_DOWN, sanitizeMessage(ex));
+        }
+    }
+
+    private DependencyItemResponse probeAiEmbeddingModel() {
+        DependencyItemResponse configured = checkAiEmbeddingModel();
+        if (!STATUS_CONFIGURED.equals(configured.status())) {
+            return new DependencyItemResponse("AI Embedding Model", STATUS_MISSING, configured.message());
+        }
+
+        try {
+            float[] vector = embeddingService.model().embed("farm quest probe");
+            if (vector != null && vector.length > 0) {
+                return new DependencyItemResponse("AI Embedding Model", STATUS_UP, "Provider=" + embeddingProvider() + ", model=" + embeddingModel());
+            }
+            return new DependencyItemResponse("AI Embedding Model", STATUS_DOWN, "Embedding model returned empty vector");
+        } catch (RuntimeException ex) {
+            return new DependencyItemResponse("AI Embedding Model", STATUS_DOWN, sanitizeMessage(ex));
+        }
+    }
+
+    private String overallStatus(List<DependencyItemResponse> dependencies, String... healthyStatuses) {
+        return dependencies.stream()
+                .map(DependencyItemResponse::status)
+                .allMatch(status -> List.of(healthyStatuses).contains(status)) ? STATUS_UP : STATUS_DOWN;
+    }
+
+    private String chatProvider() {
+        return firstPresent(
+                environment.getProperty("spring.ai.chat.provider"),
+                environment.getProperty("SPRING_AI_CHAT_PROVIDER"),
+                environment.getProperty("spring.ai.model.chat")
+        );
+    }
+
+    private String chatModel() {
+        return firstPresent(
+                environment.getProperty("spring.ai.openai.chat.model"),
+                environment.getProperty("spring.ai.openai.chat.options.model"),
+                environment.getProperty("SPRING_AI_CHAT_MODEL")
+        );
+    }
+
+    private String chatApiKey() {
+        return firstPresent(
+                environment.getProperty("PROXY_API_KEY"),
+                environment.getProperty("spring.ai.openai.api-key")
+        );
+    }
+
+    private String chatBaseUrl() {
+        return firstPresent(
+                environment.getProperty("PROXY_BASE_URL"),
+                environment.getProperty("spring.ai.openai.base-url")
+        );
+    }
+
+    private String embeddingProvider() {
+        return firstPresent(
+                environment.getProperty("spring.ai.embedding.provider"),
+                environment.getProperty("SPRING_AI_EMBEDDING_PROVIDER"),
+                environment.getProperty("spring.ai.model.embedding.text")
+        );
+    }
+
+    private String embeddingModel() {
+        return firstPresent(
+                environment.getProperty("spring.ai.openai.embedding.model"),
+                environment.getProperty("spring.ai.openai.embedding.options.model"),
+                environment.getProperty("SPRING_AI_EMBEDDING_MODEL")
+        );
+    }
+
+    private String embeddingApiKey() {
+        return firstPresent(
+                environment.getProperty("EMBEDDING_API_KEY"),
+                environment.getProperty("PROXY_API_KEY"),
+                environment.getProperty("spring.ai.openai.embedding.api-key")
+        );
+    }
+
+    private String embeddingBaseUrl() {
+        return firstPresent(
+                environment.getProperty("EMBEDDING_BASE_URL"),
+                environment.getProperty("PROXY_BASE_URL"),
+                environment.getProperty("spring.ai.openai.embedding.base-url")
+        );
     }
 
     private String firstPresent(String... values) {

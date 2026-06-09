@@ -9,6 +9,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "app.ai.provider")
 public class AiProviderProperties {
 
-    private String name;
+    private String name = "openai";
     private String apiKey;
 }
