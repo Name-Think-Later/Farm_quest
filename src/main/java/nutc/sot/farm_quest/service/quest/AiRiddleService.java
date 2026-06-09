@@ -26,6 +26,7 @@ import nutc.sot.farm_quest.persistence.repository.AiRiddleConversationRepository
 import nutc.sot.farm_quest.persistence.repository.AiRiddleMessageRepository;
 import nutc.sot.farm_quest.persistence.repository.QuestRepository;
 import nutc.sot.farm_quest.service.auth.SessionService;
+import nutc.sot.farm_quest.service.coupon.CouponService;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.document.Document;
 import org.springframework.beans.factory.annotation.Value;
@@ -47,6 +48,7 @@ public class AiRiddleService {
     private final PromptPolicyService            promptPolicyService;
     private final AnswerPolicyService            answerPolicyService;
     private final RagService                     ragService;
+    private final CouponService                  couponService;
     private final ChatClient                     chatClient;
     @Value("${spring.ai.openai.chat.options.model:${SPRING_AI_CHAT_MODEL:openai}}")
     private String                               chatModelName;
@@ -123,8 +125,10 @@ public class AiRiddleService {
 
         QuestProgressEntity updatedProgress = progress;
         if (result.correct()) {
-            updatedProgress = progressService.markCompletedFromAiRiddle(progress, conversation, OffsetDateTime.now());
-            completeConversation(conversation, OffsetDateTime.now());
+            OffsetDateTime completedAt = OffsetDateTime.now();
+            updatedProgress = progressService.markCompletedFromAiRiddle(progress, conversation, completedAt);
+            couponService.issueCouponForCompletedQuest(session.getVisitorAccount(), quest, completedAt);
+            completeConversation(conversation, completedAt);
         }
 
         return new AiRiddleMessageResponse(

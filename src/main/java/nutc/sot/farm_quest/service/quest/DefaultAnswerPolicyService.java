@@ -17,8 +17,8 @@ public class DefaultAnswerPolicyService implements AnswerPolicyService {
                                    List<AiRiddleMessageItem> history,
                                    String visitorMessage,
                                    Map<String, Object> metadata) {
-        boolean answerAttempt = isAnswerAttempt(visitorMessage);
-        boolean correct = answerAttempt && isCorrect(visitorMessage, config.getAnswerCriteria());
+        boolean correct = isCorrect(visitorMessage, config.getAnswerCriteria());
+        boolean answerAttempt = correct || isAnswerAttempt(visitorMessage);
         return new AiRiddleResult(
                 StringUtils.hasText(assistantReply) ? assistantReply : "現在暫時無法提供回應，請稍後再試。",
                 answerAttempt,

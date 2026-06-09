@@ -6,6 +6,9 @@ import java.util.Optional;
 import java.util.UUID;
 import nutc.sot.farm_quest.persistence.entity.CouponEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface CouponRepository extends JpaRepository<CouponEntity, UUID> {
     boolean existsByVisitorAccount_IdAndCouponCampaign_Id(UUID visitorAccountId, UUID couponCampaignId);
@@ -13,4 +16,22 @@ public interface CouponRepository extends JpaRepository<CouponEntity, UUID> {
     List<CouponEntity> findByVisitorAccount_IdOrderByIssuedAtDesc(UUID visitorAccountId);
     Optional<CouponEntity> findByIdAndVisitorAccount_Id(UUID id, UUID visitorAccountId);
     List<CouponEntity> findByVisitorAccount_IdAndStatusAndExpiresAtAfterOrderByIssuedAtDesc(UUID visitorAccountId, String status, OffsetDateTime now);
+
+    @Modifying
+    @Query("""
+            update CouponEntity coupon
+               set coupon.status = :toStatus,
+                   coupon.consumedAt = :time,
+                   coupon.updatedAt = :time
+             where coupon.id = :couponId
+               and coupon.visitorAccount.id = :visitorAccountId
+               and coupon.status = :fromStatus
+               and coupon.consumedAt is null
+               and coupon.expiresAt > :time
+            """)
+    int consumeCoupon(@Param("couponId") UUID couponId,
+                      @Param("visitorAccountId") UUID visitorAccountId,
+                      @Param("fromStatus") String fromStatus,
+                      @Param("toStatus") String toStatus,
+                      @Param("time") OffsetDateTime time);
 }
