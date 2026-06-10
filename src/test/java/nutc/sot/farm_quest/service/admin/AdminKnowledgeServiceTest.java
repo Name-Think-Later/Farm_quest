@@ -65,7 +65,65 @@ class AdminKnowledgeServiceTest {
     }
 
     @Test
-    void reindexKnowledgeMarksDocumentsPendingAndReturnsAcceptedResponse() {
+    void reindexKnowledgeQueuesPendingDocumentsBeforeFailedOnes() {
+        GameEntity game = game();
+        KnowledgeDocumentEntity pendingDocument = document(game, quest(game), null);
+        pendingDocument.setEmbeddingStatus("PENDING");
+        KnowledgeDocumentEntity failedDocument = document(game, quest(game), null);
+        failedDocument.setId(UUID.fromString("77777777-7777-7777-7777-777777777777"));
+        failedDocument.setEmbeddingStatus("FAILED");
+        when(gameRepository.findByCode("farm-quest")).thenReturn(Optional.of(game));
+        when(knowledgeDocumentRepository.findByGame_IdAndEmbeddingStatusOrderByUpdatedAtDesc(game.getId(), "PENDING"))
+                .thenReturn(List.of(pendingDocument));
+        when(knowledgeDocumentRepository.saveAll(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        var response = service.reindexKnowledge(new ReindexKnowledgeRequest(false));
+
+        assertThat(response.accepted()).isTrue();
+        assertThat(response.queuedDocumentCount()).isEqualTo(1);
+        assertThat(response.status()).isEqualTo("REINDEX_QUEUED");
+        assertThat(pendingDocument.getEmbeddingStatus()).isEqualTo("PENDING");
+        verify(adminKnowledgeReindexService).triggerReindexAsync(List.of(pendingDocument.getId()));
+    }
+
+    @Test
+    void reindexKnowledgeQueuesFailedDocumentsWhenNoPendingDocumentsExist() {
+        GameEntity game = game();
+        KnowledgeDocumentEntity failedDocument = document(game, quest(game), null);
+        failedDocument.setEmbeddingStatus("FAILED");
+        when(gameRepository.findByCode("farm-quest")).thenReturn(Optional.of(game));
+        when(knowledgeDocumentRepository.findByGame_IdAndEmbeddingStatusOrderByUpdatedAtDesc(game.getId(), "PENDING"))
+                .thenReturn(List.of());
+        when(knowledgeDocumentRepository.findByGame_IdAndEmbeddingStatusOrderByUpdatedAtDesc(game.getId(), "FAILED"))
+                .thenReturn(List.of(failedDocument));
+        when(knowledgeDocumentRepository.saveAll(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        var response = service.reindexKnowledge(new ReindexKnowledgeRequest(false));
+
+        assertThat(response.queuedDocumentCount()).isEqualTo(1);
+        assertThat(response.status()).isEqualTo("REINDEX_QUEUED");
+        assertThat(failedDocument.getEmbeddingStatus()).isEqualTo("PENDING");
+        verify(adminKnowledgeReindexService).triggerReindexAsync(List.of(failedDocument.getId()));
+    }
+
+    @Test
+    void reindexKnowledgeReturnsZeroWhenNoPendingOrFailedDocumentsExist() {
+        GameEntity game = game();
+        when(gameRepository.findByCode("farm-quest")).thenReturn(Optional.of(game));
+        when(knowledgeDocumentRepository.findByGame_IdAndEmbeddingStatusOrderByUpdatedAtDesc(game.getId(), "PENDING"))
+                .thenReturn(List.of());
+        when(knowledgeDocumentRepository.findByGame_IdAndEmbeddingStatusOrderByUpdatedAtDesc(game.getId(), "FAILED"))
+                .thenReturn(List.of());
+
+        var response = service.reindexKnowledge(new ReindexKnowledgeRequest(false));
+
+        assertThat(response.accepted()).isTrue();
+        assertThat(response.queuedDocumentCount()).isZero();
+        assertThat(response.status()).isEqualTo("REINDEX_QUEUED");
+    }
+
+    @Test
+    void reindexKnowledgeQueuesAllDocumentsWhenFullRebuildIsRequested() {
         GameEntity game = game();
         KnowledgeDocumentEntity document = document(game, quest(game), null);
         document.setEmbeddingStatus("INDEXED");
@@ -73,12 +131,12 @@ class AdminKnowledgeServiceTest {
         when(knowledgeDocumentRepository.findByGame_IdOrderByUpdatedAtDesc(game.getId())).thenReturn(List.of(document));
         when(knowledgeDocumentRepository.saveAll(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
-        var response = service.reindexKnowledge(new ReindexKnowledgeRequest(false));
+        var response = service.reindexKnowledge(new ReindexKnowledgeRequest(true));
 
-        assertThat(response.accepted()).isTrue();
+        assertThat(response.status()).isEqualTo("REINDEX_QUEUED");
         assertThat(response.queuedDocumentCount()).isEqualTo(1);
         assertThat(document.getEmbeddingStatus()).isEqualTo("PENDING");
-        verify(adminKnowledgeReindexService).triggerReindexAsync(any());
+        verify(adminKnowledgeReindexService).triggerReindexAsync(List.of(document.getId()));
     }
 
     private AuthProperties authProperties() {

@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nutc.sot.farm_quest.persistence.entity.KnowledgeDocumentEntity;
 import nutc.sot.farm_quest.persistence.repository.KnowledgeDocumentRepository;
-import nutc.sot.farm_quest.service.quest.VectorStoreService;
+import nutc.sot.farm_quest.service.quest.KnowledgeIndexingService;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,7 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class AdminKnowledgeReindexService {
 
     private final KnowledgeDocumentRepository knowledgeDocumentRepository;
-    private final VectorStoreService vectorStoreService;
+    private final KnowledgeIndexingService knowledgeIndexingService;
 
     @Async
     @Transactional
@@ -31,7 +31,7 @@ public class AdminKnowledgeReindexService {
         }
 
         try {
-            vectorStoreService.indexKnowledgeDocuments(documents);
+            knowledgeIndexingService.indexKnowledgeDocuments(documents);
             OffsetDateTime indexedAt = OffsetDateTime.now();
             for (KnowledgeDocumentEntity document : documents) {
                 document.setEmbeddingStatus("INDEXED");

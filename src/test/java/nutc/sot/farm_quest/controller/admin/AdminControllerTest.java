@@ -6,6 +6,7 @@ import java.util.UUID;
 import nutc.sot.farm_quest.dto.admin.AdminOverviewStatsResponse;
 import nutc.sot.farm_quest.dto.admin.AdminQuestListResponse;
 import nutc.sot.farm_quest.dto.admin.AdminQuestResponse;
+import nutc.sot.farm_quest.dto.admin.ReindexKnowledgeResponse;
 import nutc.sot.farm_quest.exception.AuthErrorCode;
 import nutc.sot.farm_quest.exception.AuthException;
 import nutc.sot.farm_quest.exception.GlobalExceptionHandler;
@@ -22,11 +23,13 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -98,6 +101,22 @@ class AdminControllerTest {
                         .header("Authorization", "Bearer visitor-session-token"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.code").value("ADMIN_UNAUTHORIZED"));
+    }
+
+    @Test
+    void reindexKnowledgeUsesTargetedReindexWhenRequestBodyIsMissing() throws Exception {
+        when(adminKnowledgeService.reindexKnowledge(any())).thenReturn(new ReindexKnowledgeResponse(true, 0, "REINDEX_QUEUED"));
+
+        mockMvc.perform(post("/api/admin/knowledge-documents/reindex")
+                        .header("Authorization", "Bearer admin-secret"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.accepted").value(true))
+                .andExpect(jsonPath("$.queuedDocumentCount").value(0))
+                .andExpect(jsonPath("$.status").value("REINDEX_QUEUED"));
+
+        verify(adminAuthService).requireAdmin("admin-secret");
+        verify(adminKnowledgeService).reindexKnowledge(any());
     }
 
     @Test

@@ -32,6 +32,7 @@ public class AdminKnowledgeService {
     private static final String STATUS_PENDING = "PENDING";
     private static final String STATUS_INDEXED = "INDEXED";
     private static final String STATUS_FAILED = "FAILED";
+    private static final String STATUS_REINDEX_QUEUED = "REINDEX_QUEUED";
 
     private final KnowledgeDocumentRepository knowledgeDocumentRepository;
     private final QuestRepository questRepository;
@@ -85,7 +86,14 @@ public class AdminKnowledgeService {
     @Transactional
     public ReindexKnowledgeResponse reindexKnowledge(ReindexKnowledgeRequest request) {
         GameEntity game = getCurrentGame();
-        List<KnowledgeDocumentEntity> documents = knowledgeDocumentRepository.findByGame_IdOrderByUpdatedAtDesc(game.getId());
+        boolean fullRebuild = request != null && request.fullRebuild();
+        List<KnowledgeDocumentEntity> documents = fullRebuild
+                ? knowledgeDocumentRepository.findByGame_IdOrderByUpdatedAtDesc(game.getId())
+                : queueTargetedReindexDocuments(game.getId());
+        if (documents.isEmpty()) {
+            return new ReindexKnowledgeResponse(true, 0, STATUS_REINDEX_QUEUED);
+        }
+
         OffsetDateTime now = OffsetDateTime.now();
         for (KnowledgeDocumentEntity document : documents) {
             document.setEmbeddingStatus(STATUS_PENDING);
@@ -94,7 +102,15 @@ public class AdminKnowledgeService {
         }
         knowledgeDocumentRepository.saveAll(documents);
         adminKnowledgeReindexService.triggerReindexAsync(documents.stream().map(KnowledgeDocumentEntity::getId).toList());
-        return new ReindexKnowledgeResponse(true, documents.size(), request.fullRebuild() ? "FULL_REINDEX_QUEUED" : "REINDEX_QUEUED");
+        return new ReindexKnowledgeResponse(true, documents.size(), STATUS_REINDEX_QUEUED);
+    }
+
+    private List<KnowledgeDocumentEntity> queueTargetedReindexDocuments(UUID gameId) {
+        List<KnowledgeDocumentEntity> pendingDocuments = knowledgeDocumentRepository.findByGame_IdAndEmbeddingStatusOrderByUpdatedAtDesc(gameId, STATUS_PENDING);
+        if (!pendingDocuments.isEmpty()) {
+            return pendingDocuments;
+        }
+        return knowledgeDocumentRepository.findByGame_IdAndEmbeddingStatusOrderByUpdatedAtDesc(gameId, STATUS_FAILED);
     }
 
     private int nextVersion(QuestEntity quest, LocationEntity location) {

@@ -7,7 +7,7 @@ import nutc.sot.farm_quest.persistence.entity.GameEntity;
 import nutc.sot.farm_quest.persistence.entity.KnowledgeDocumentEntity;
 import nutc.sot.farm_quest.persistence.entity.QuestEntity;
 import nutc.sot.farm_quest.persistence.repository.KnowledgeDocumentRepository;
-import nutc.sot.farm_quest.service.quest.VectorStoreService;
+import nutc.sot.farm_quest.service.quest.KnowledgeIndexingService;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -21,21 +21,21 @@ import static org.mockito.Mockito.when;
 class AdminKnowledgeReindexServiceTest {
 
     private final KnowledgeDocumentRepository knowledgeDocumentRepository = mock(KnowledgeDocumentRepository.class);
-    private final VectorStoreService vectorStoreService = mock(VectorStoreService.class);
-    private final AdminKnowledgeReindexService service = new AdminKnowledgeReindexService(knowledgeDocumentRepository, vectorStoreService);
+    private final KnowledgeIndexingService knowledgeIndexingService = mock(KnowledgeIndexingService.class);
+    private final AdminKnowledgeReindexService service = new AdminKnowledgeReindexService(knowledgeDocumentRepository, knowledgeIndexingService);
 
     @Test
     void triggerReindexAsyncMarksDocumentsIndexedWhenVectorStoreSucceeds() {
         KnowledgeDocumentEntity document = document();
         when(knowledgeDocumentRepository.findAllById(List.of(document.getId()))).thenReturn(List.of(document));
         when(knowledgeDocumentRepository.saveAll(any())).thenAnswer(invocation -> invocation.getArgument(0));
-        doNothing().when(vectorStoreService).indexKnowledgeDocuments(any());
+        doNothing().when(knowledgeIndexingService).indexKnowledgeDocuments(any());
 
         service.triggerReindexAsync(List.of(document.getId()));
 
         assertThat(document.getEmbeddingStatus()).isEqualTo("INDEXED");
         assertThat(document.getIndexedAt()).isNotNull();
-        verify(vectorStoreService).indexKnowledgeDocuments(any());
+        verify(knowledgeIndexingService).indexKnowledgeDocuments(any());
     }
 
     @Test
@@ -43,7 +43,7 @@ class AdminKnowledgeReindexServiceTest {
         KnowledgeDocumentEntity document = document();
         when(knowledgeDocumentRepository.findAllById(List.of(document.getId()))).thenReturn(List.of(document));
         when(knowledgeDocumentRepository.saveAll(any())).thenAnswer(invocation -> invocation.getArgument(0));
-        doThrow(new RuntimeException("qdrant down")).when(vectorStoreService).indexKnowledgeDocuments(any());
+        doThrow(new RuntimeException("qdrant down")).when(knowledgeIndexingService).indexKnowledgeDocuments(any());
 
         service.triggerReindexAsync(List.of(document.getId()));
 

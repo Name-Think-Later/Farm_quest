@@ -23,7 +23,7 @@ public class DefaultPromptPolicyService implements PromptPolicyService {
                 .map(item -> item.role() + ": " + item.content())
                 .collect(Collectors.joining("\n"));
         String contextText = documents.stream()
-                .map(document -> "- " + document.getText())
+                .map(this::formatDocumentContext)
                 .collect(Collectors.joining("\n"));
         String systemPrompt = String.join("\n\n",
                 "你是農遊解謎 AI 助手。",
@@ -41,5 +41,13 @@ public class DefaultPromptPolicyService implements PromptPolicyService {
                 "請以繁體中文回覆，提供提示或互動式引導，不要直接爆雷。"
         );
         return new PromptBundle(systemPrompt, userPrompt);
+    }
+
+    private String formatDocumentContext(Document document) {
+        Object title = document.getMetadata().get("title");
+        Object source = document.getMetadata().get("source");
+        return "- 標題：" + (title == null ? "未命名" : title)
+                + "；來源：" + (source == null ? "未知" : source)
+                + "；內容：" + document.getText();
     }
 }

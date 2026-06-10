@@ -2,6 +2,7 @@ package nutc.sot.farm_quest.service.quest;
 
 import java.util.List;
 import java.util.UUID;
+import nutc.sot.farm_quest.config.QdrantProperties;
 import nutc.sot.farm_quest.exception.QuestException;
 import nutc.sot.farm_quest.persistence.entity.GameEntity;
 import nutc.sot.farm_quest.persistence.entity.QuestEntity;
@@ -11,6 +12,7 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.ai.vectorstore.filter.Filter;
+import org.springframework.web.client.RestClient;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -25,7 +27,14 @@ class SpringAiVectorStoreServiceTest {
     private static final UUID QUEST_ID = UUID.fromString("22222222-2222-2222-2222-222222222222");
 
     private final VectorStore vectorStore = mock(VectorStore.class);
-    private final SpringAiVectorStoreService service = new SpringAiVectorStoreService(vectorStore);
+    private final EmbeddingService embeddingService = mock(EmbeddingService.class);
+    private final RestClient qdrantRestClient = mock(RestClient.class);
+    private final SpringAiVectorStoreService service = new SpringAiVectorStoreService(
+            vectorStore,
+            embeddingService,
+            new QdrantProperties(false, "http://localhost:6333", "", "knowledge-documents", 1024, "COSINE"),
+            qdrantRestClient
+    );
 
     @Test
     void searchBuildsScopedRequest() {
