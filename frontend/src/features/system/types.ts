@@ -1,6 +1,6 @@
 export type HealthStatus = {
-  status: 'UP' | 'DOWN';
-  checkedAt: string;
-  message: string;
-  mode: 'mock' | 'remote';
+  status: 'UP' | 'DEGRADED';
+  application: string;
+  timestamp: string;
+  seedDataReady: boolean;
 };

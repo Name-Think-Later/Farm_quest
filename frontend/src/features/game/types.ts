@@ -1,12 +1,28 @@
-export type GameEntry = {
+export type GameEntryResponse = {
+  gameId: string;
+  code: string;
   name: string;
-  description: string;
-  networkHint: string;
+  entryPath: string;
+  startsAt: string;
+  endsAt: string;
 };
 
-export type GameState = {
-  hasSession: boolean;
-  invalidSession: boolean;
-  nextRoute: '/' | '/auth/email' | '/quest/current';
+export type GameStateResponse = {
+  gameId: string;
+  visitorAccountId: string;
+  currentQuestId: string | null;
+  currentQuestTitle: string | null;
+  progressStatus: string;
+  gpsVerified: boolean;
+  aiRiddleAvailable: boolean;
+  nextStep: string;
+};
+
+export type EntryActionState = {
   ctaLabel: string;
+  nextRoute: '/' | '/auth/email' | '/quest/current' | '/quest/location' | '/quest/riddle' | '/coupons/current';
+  headline: string;
+  description: string;
+  invalidSession: boolean;
+  hasSession: boolean;
 };

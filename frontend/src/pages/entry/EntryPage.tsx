@@ -4,12 +4,16 @@ import { MobileShell } from '../../components/layout/MobileShell';
 import { NetworkBanner } from '../../components/feedback/NetworkBanner';
 import { LoadingState } from '../../components/feedback/LoadingState';
 import { ErrorState } from '../../components/feedback/ErrorState';
-import { fetchGameEntry, fetchGameState } from '../../features/game/game.api';
+import { fetchGameEntry, fetchGameState, resolveEntryAction } from '../../features/game/game.api';
 import { useSessionStore } from '../../features/session/sessionStore';
+
+const networkHint = '若網路不穩，已載入的任務文字仍可閱讀，但驗證與 AI 對話需要連線。';
 
 export function EntryPage() {
   const navigate = useNavigate();
   const resetSession = useSessionStore((state) => state.resetSession);
+  const token = useSessionStore((state) => state.token);
+  const invalidSession = useSessionStore((state) => state.invalidSession);
 
   const entryQuery = useQuery({
     queryKey: ['game-entry'],
@@ -23,20 +27,25 @@ export function EntryPage() {
   });
 
   const stateQuery = useQuery({
-    queryKey: ['game-state'],
+    queryKey: ['game-state', token],
+    enabled: Boolean(token),
     queryFn: async () => {
       const result = await fetchGameState();
       if (!result.ok) {
+        if (result.code === 'SESSION_INVALID' || result.code === 'SESSION_EXPIRED') {
+          resetSession();
+        }
         throw new Error(result.message);
       }
       return result.data;
     },
   });
 
-  const isLoading = entryQuery.isLoading || stateQuery.isLoading;
+  const isLoading = entryQuery.isLoading || (Boolean(token) && stateQuery.isLoading);
   const error = entryQuery.error ?? stateQuery.error;
   const entry = entryQuery.data;
-  const state = stateQuery.data;
+  const state = stateQuery.data ?? null;
+  const action = resolveEntryAction(state, invalidSession);
 
   return (
     <MobileShell
@@ -45,15 +54,10 @@ export function EntryPage() {
         <button
           type="button"
           className="primary-button"
-          onClick={() => {
-            if (!state) return;
-            if (state.invalidSession) {
-              resetSession();
-            }
-            navigate(state.nextRoute);
-          }}
+          onClick={() => navigate(action.nextRoute)}
+          disabled={isLoading || Boolean(error)}
         >
-          {state?.ctaLabel ?? '開始'}
+          {action.ctaLabel}
         </button>
       }
     >
@@ -64,20 +68,20 @@ export function EntryPage() {
         <div className="section-card primary-feature-card">
           <p className="section-kicker">開始前提醒</p>
           <strong className="feature-title">準備出發</strong>
-          <p className="feature-copy">{entry.networkHint}</p>
+          <p className="feature-copy">{networkHint}</p>
         </div>
       ) : null}
-      {state?.invalidSession ? (
+      {action.invalidSession ? (
         <div className="status-card status-error">
-          <strong>目前 session 已失效</strong>
-          <p>請重新開始遊戲，再次進入 Email 驗證流程。</p>
+          <strong>{action.headline}</strong>
+          <p>{action.description}</p>
         </div>
-      ) : state ? (
+      ) : (
         <div className="status-card">
-          <strong>{state.hasSession ? '你可以直接繼續目前任務' : '下一步：先完成 Email 登入'}</strong>
-          <p>{state.hasSession ? '系統已保留你的登入狀態，可直接回到任務流程。' : '登入後才能進入任務、GPS 驗證、AI 猜謎與優惠券流程。'}</p>
+          <strong>{action.headline}</strong>
+          <p>{action.description}</p>
         </div>
-      ) : null}
+      )}
       <div className="hero-card page-hero-card">
         <p className="hero-kicker">走進茶園，跟著提示一步步探索</p>
         <strong className="feature-title">從登入開始今天的探索旅程</strong>

@@ -10,7 +10,7 @@ type MobileShellProps = PropsWithChildren<{
 
 export function MobileShell({ title, description, actions, children }: MobileShellProps) {
   const navigate = useNavigate();
-  const verified = useSessionStore((state) => state.verified);
+  const isAuthenticated = useSessionStore((state) => state.isAuthenticated);
   const resetSession = useSessionStore((state) => state.resetSession);
 
   return (
@@ -18,7 +18,7 @@ export function MobileShell({ title, description, actions, children }: MobileShe
       <header className="page-header">
         <div className="page-header-row">
           <p className="eyebrow">農遊謎走</p>
-          {verified ? (
+          {isAuthenticated ? (
             <button
               type="button"
               className="header-logout-button"

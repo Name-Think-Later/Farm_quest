@@ -2,24 +2,27 @@ import { FormEvent, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MobileShell } from '../../components/layout/MobileShell';
 import { NetworkBanner } from '../../components/feedback/NetworkBanner';
-import { useRiddleChat } from '../../features/quests/useQuestFlows';
-import { useSessionStore } from '../../features/session/sessionStore';
+import { LoadingState } from '../../components/feedback/LoadingState';
+import { ErrorState } from '../../components/feedback/ErrorState';
+import { useCurrentQuest, useRiddleChat, useRiddleMessages } from '../../features/quests/useQuestFlows';
+import { toChatMessages } from '../../features/quests/types';
 
 export function RiddleChatPage() {
   const navigate = useNavigate();
   const [input, setInput] = useState('');
   const [resultText, setResultText] = useState('');
-  const chatMessages = useSessionStore((state) => state.chatMessages);
-  const mutation = useRiddleChat();
+  const currentQuestQuery = useCurrentQuest();
+  const questId = currentQuestQuery.data?.questId;
+  const messagesQuery = useRiddleMessages(questId);
+  const mutation = useRiddleChat(questId);
+  const chatMessages = toChatMessages(messagesQuery.data?.messages ?? []);
 
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault();
     if (!input.trim()) return;
     const result = await mutation.mutateAsync(input);
-    if (result.ok) {
-      setResultText(result.data.rewardMessage ?? result.data.reply.content);
-      setInput('');
-    }
+    setResultText(result.questCompleted ? '已完成景點任務並取得優惠券。' : (result.safeMessage ?? result.replyContent));
+    setInput('');
   };
 
   return (
@@ -28,11 +31,15 @@ export function RiddleChatPage() {
       actions={
         <div className="inline-row">
           <button type="button" className="secondary-button" onClick={() => setInput('給我提示')}>快速填入提示需求</button>
-          <button type="submit" form="chat-form" className="primary-button" disabled={mutation.isPending || !input.trim()}>{mutation.isPending ? '送出中…' : '送出訊息'}</button>
+          <button type="submit" form="chat-form" className="primary-button" disabled={mutation.isPending || !input.trim() || !questId}>{mutation.isPending ? '送出中…' : '送出訊息'}</button>
         </div>
       }
     >
       <NetworkBanner />
+      {currentQuestQuery.isLoading || messagesQuery.isLoading ? <LoadingState message="正在載入對話紀錄…" /> : null}
+      {currentQuestQuery.error ? <ErrorState message={(currentQuestQuery.error as Error).message} onRetry={() => void currentQuestQuery.refetch()} /> : null}
+      {messagesQuery.error ? <ErrorState message={(messagesQuery.error as Error).message} onRetry={() => void messagesQuery.refetch()} /> : null}
+      {mutation.error ? <ErrorState message={(mutation.error as Error).message} /> : null}
       <div className="chat-log line-chat-log">
         {chatMessages.map((message) => (
           <div key={message.id} className={`chat-row ${message.role}`}>

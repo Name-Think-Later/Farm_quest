@@ -8,14 +8,12 @@ import type { CouponStatus } from '../../features/coupons/types';
 
 function statusText(status: CouponStatus) {
   switch (status) {
-    case 'available':
+    case 'ISSUED':
       return '可使用';
-    case 'used':
+    case 'CONSUMED':
       return '已使用';
-    case 'expired':
+    case 'EXPIRED':
       return '已過期';
-    case 'invalid':
-      return '無效';
   }
 }
 
@@ -35,10 +33,11 @@ export function CouponPage() {
               <div key={coupon.id} className="coupon-card accent-card">
                 <strong>{coupon.title}</strong>
                 <div className="coupon-meta">
-                  <p>適用商家：{coupon.merchant || '店家資訊缺漏'}</p>
+                  <p>適用商家：{coupon.merchant}</p>
                   <p>有效期限：{coupon.expiresAt}</p>
+                  <p>兌換代碼：{coupon.displayCode}</p>
                   <p>
-                    <span className={`coupon-status ${coupon.status}`}>{statusText(coupon.status)}</span>
+                    <span className={`coupon-status ${coupon.status.toLowerCase()}`}>{statusText(coupon.status)}</span>
                   </p>
                   <p>{coupon.usageText}</p>
                 </div>

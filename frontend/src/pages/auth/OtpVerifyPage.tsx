@@ -21,8 +21,8 @@ export function OtpVerifyPage() {
       return;
     }
 
-    setStatusMessage(result.data.message);
-    if (result.data.success) {
+    setStatusMessage('驗證成功，正在帶你前往目前任務頁。');
+    if (result.data.authenticated) {
       navigate('/quest/current');
     }
   };
@@ -30,7 +30,7 @@ export function OtpVerifyPage() {
   return (
     <MobileShell
       title="Email 驗證確認"
-      actions={<button type="submit" form="otp-form" className="primary-button" disabled={mutation.isPending || otp.length < 6}>{mutation.isPending ? '驗證中…' : '確認驗證碼'}</button>}
+      actions={<button type="submit" form="otp-form" className="primary-button" disabled={mutation.isPending || otp.length < 6 || !email}>{mutation.isPending ? '驗證中…' : '確認驗證碼'}</button>}
     >
       <NetworkBanner />
       <form id="otp-form" className="section-card" onSubmit={(event) => void onSubmit(event)}>
@@ -40,6 +40,7 @@ export function OtpVerifyPage() {
           <p className="helper-text">驗證成功後會自動進入目前任務頁。</p>
         </div>
       </form>
+      {!email ? <div className="status-card status-error"><strong>缺少 Email 資訊</strong><p>請返回上一頁重新輸入 Email 後再驗證。</p></div> : null}
       {statusMessage ? <div className="status-card"><strong>驗證狀態</strong><p>{statusMessage}</p></div> : null}
       {mutation.data?.ok === false ? <ErrorState title="驗證未通過" message={mutation.data.message} /> : null}
       <button type="button" className="text-button" onClick={() => navigate('/auth/email')}>返回重新輸入 Email</button>

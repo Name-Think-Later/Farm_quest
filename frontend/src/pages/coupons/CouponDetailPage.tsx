@@ -9,14 +9,12 @@ import type { CouponStatus } from '../../features/coupons/types';
 
 function statusText(status: CouponStatus) {
   switch (status) {
-    case 'available':
+    case 'ISSUED':
       return '可使用';
-    case 'used':
+    case 'CONSUMED':
       return '已使用';
-    case 'expired':
+    case 'EXPIRED':
       return '已過期';
-    case 'invalid':
-      return '無效';
   }
 }
 
@@ -29,14 +27,14 @@ export function CouponDetailPage() {
 
   const coupon = query.data;
   const missingCouponId = !couponId;
-  const canConsume = coupon?.status === 'available' && Boolean(coupon?.merchant) && !mutation.isPending;
+  const canConsume = coupon?.status === 'ISSUED' && !mutation.isPending;
 
   return (
     <>
       <MobileShell
         title="優惠券詳情"
         actions={
-          coupon && coupon.status === 'available' ? (
+          coupon && coupon.status === 'ISSUED' ? (
             <button type="button" className="primary-button" disabled={!canConsume} onClick={() => setConfirmOpen(true)}>
               {mutation.isPending ? '使用中…' : '確認使用優惠券'}
             </button>
@@ -53,10 +51,12 @@ export function CouponDetailPage() {
               <strong>{coupon.title}</strong>
               <div className="coupon-meta">
                 <p>優惠內容：{coupon.description}</p>
-                <p>適用商家：{coupon.merchant || '店家資訊缺漏'}</p>
+                <p>適用商家：{coupon.merchant}</p>
+                {coupon.merchantAddress ? <p>店家地址：{coupon.merchantAddress}</p> : null}
                 <p>有效期限：{coupon.expiresAt}</p>
+                <p>兌換代碼：{coupon.displayCode}</p>
                 <p>
-                  <span className={`coupon-status ${coupon.status}`}>{statusText(coupon.status)}</span>
+                  <span className={`coupon-status ${coupon.status.toLowerCase()}`}>{statusText(coupon.status)}</span>
                 </p>
                 <p>{coupon.usageText}</p>
               </div>
@@ -64,13 +64,7 @@ export function CouponDetailPage() {
             {mutation.data?.ok ? (
               <div className="status-card">
                 <strong>使用狀態</strong>
-                <p>{mutation.data.data.message}</p>
-              </div>
-            ) : null}
-            {!coupon.merchant ? (
-              <div className="status-card status-error">
-                <strong>資料暫時不完整</strong>
-                <p>這張優惠券缺少店家資訊，目前不可使用。</p>
+                <p>優惠券已標記為使用完成。</p>
               </div>
             ) : null}
           </>

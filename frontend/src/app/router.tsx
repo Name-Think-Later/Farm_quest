@@ -7,6 +7,7 @@ import { LoadingState } from '../components/feedback/LoadingState';
 import { ErrorState } from '../components/feedback/ErrorState';
 import { useHealthStatus } from '../features/system/useHealthStatus';
 import { useSessionStore } from '../features/session/sessionStore';
+import { fetchVisitorSession } from '../features/auth/auth.api';
 import { EntryPage } from '../pages/entry/EntryPage';
 import { EmailLoginPage } from '../pages/auth/EmailLoginPage';
 import { OtpVerifyPage } from '../pages/auth/OtpVerifyPage';
@@ -19,13 +20,47 @@ import { CouponDetailPage } from '../pages/coupons/CouponDetailPage';
 function HomeLayout() {
   const { data, isLoading, error, refetch } = useHealthStatus();
   const hydrateFromStorage = useSessionStore((state) => state.hydrateFromStorage);
+  const token = useSessionStore((state) => state.token);
   const invalidSession = useSessionStore((state) => state.invalidSession);
   const clearInvalidSession = useSessionStore((state) => state.clearInvalidSession);
+  const markInvalidSession = useSessionStore((state) => state.markInvalidSession);
+  const markSessionChecked = useSessionStore((state) => state.markSessionChecked);
   const navigate = useNavigate();
 
   useEffect(() => {
     hydrateFromStorage();
   }, [hydrateFromStorage]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const validateSession = async () => {
+      if (!token) {
+        if (!cancelled) {
+          markSessionChecked(false);
+        }
+        return;
+      }
+
+      const result = await fetchVisitorSession();
+      if (cancelled) {
+        return;
+      }
+
+      if (result.ok && result.data.authenticated) {
+        markSessionChecked(true);
+        return;
+      }
+
+      markInvalidSession();
+    };
+
+    void validateSession();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [markInvalidSession, markSessionChecked, token]);
 
   useEffect(() => {
     if (invalidSession) {
@@ -45,8 +80,8 @@ function HomeLayout() {
       {data ? (
         <div className="section-card">
           <strong>系統健康檢查</strong>
-          <p>{data.status} · {data.message}</p>
-          <p className="helper-text">最後檢查：{new Date(data.checkedAt).toLocaleString('zh-TW')}</p>
+          <p>{data.status} · {data.application}</p>
+          <p className="helper-text">最後檢查：{new Date(data.timestamp).toLocaleString('zh-TW')}</p>
         </div>
       ) : null}
       <div className="route-links">
@@ -63,8 +98,60 @@ function HomeLayout() {
 }
 
 function RequireVerified({ children }: { children: ReactElement }) {
-  const verified = useSessionStore((state) => state.verified);
-  return verified ? children : <Navigate to="/auth/email" replace />;
+  const token = useSessionStore((state) => state.token);
+  const isAuthenticated = useSessionStore((state) => state.isAuthenticated);
+  const sessionChecked = useSessionStore((state) => state.sessionChecked);
+  const hydrateFromStorage = useSessionStore((state) => state.hydrateFromStorage);
+  const markSessionChecked = useSessionStore((state) => state.markSessionChecked);
+  const markInvalidSession = useSessionStore((state) => state.markInvalidSession);
+
+  useEffect(() => {
+    hydrateFromStorage();
+  }, [hydrateFromStorage]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const validateSession = async () => {
+      const currentToken = useSessionStore.getState().token;
+      if (!currentToken) {
+        if (!cancelled) {
+          markSessionChecked(false);
+        }
+        return;
+      }
+
+      const result = await fetchVisitorSession();
+      if (cancelled) {
+        return;
+      }
+
+      if (result.ok && result.data.authenticated) {
+        markSessionChecked(true);
+        return;
+      }
+
+      markInvalidSession();
+    };
+
+    if (!sessionChecked) {
+      void validateSession();
+    }
+
+    return () => {
+      cancelled = true;
+    };
+  }, [markInvalidSession, markSessionChecked, sessionChecked, token]);
+
+  if (!token) {
+    return <Navigate to="/auth/email" replace />;
+  }
+
+  if (!sessionChecked) {
+    return <MobileShell title="驗證登入狀態"><LoadingState message="正在確認登入狀態…" /></MobileShell>;
+  }
+
+  return isAuthenticated ? children : <Navigate to="/auth/email" replace />;
 }
 
 const router = createBrowserRouter([

@@ -1,37 +1,33 @@
 import { useSessionStore } from '../session/sessionStore';
-import { OtpResponse, SendOtpPayload, VerifyOtpPayload } from './types';
+import type { EmailVerificationResponse, SendOtpPayload, VerifyOtpPayload, VisitorSessionResponse } from './types';
 
-export async function sendMockOtp({ email }: SendOtpPayload): Promise<OtpResponse> {
+export async function sendMockOtp({ email }: SendOtpPayload): Promise<EmailVerificationResponse> {
   await new Promise((resolve) => setTimeout(resolve, 250));
   useSessionStore.getState().setEmail(email);
   useSessionStore.getState().requestOtp();
   return {
-    success: true,
-    message: '驗證碼已寄出，請前往下一步輸入。',
+    email,
+    expiresAt: new Date(Date.now() + 5 * 60_000).toISOString(),
+    resendAvailableAt: new Date(Date.now() + 60_000).toISOString(),
+    status: 'PENDING',
   };
 }
 
-export async function verifyMockOtp({ email, otp }: VerifyOtpPayload): Promise<OtpResponse> {
+export async function verifyMockOtp({ email, otp }: VerifyOtpPayload): Promise<VisitorSessionResponse> {
   await new Promise((resolve) => setTimeout(resolve, 250));
 
-  if (otp === '000000') {
-    return {
-      success: false,
-      message: '驗證碼已過期，請返回上一頁重新寄送。',
-    };
-  }
-
   if (otp !== '123456') {
-    return {
-      success: false,
-      message: '驗證失敗，請確認驗證碼後再試一次。',
-    };
+    throw new Error('驗證失敗，請確認驗證碼後再試一次。');
   }
 
-  useSessionStore.getState().setEmail(email);
-  useSessionStore.getState().verifyOtp();
+  const sessionToken = `mock-token-${Date.now()}`;
+  useSessionStore.getState().authenticate(sessionToken, email);
   return {
-    success: true,
-    message: '驗證成功，正在帶你前往目前任務頁。',
+    visitorAccountId: 'mock-visitor-id',
+    email,
+    sessionToken,
+    issuedAt: new Date().toISOString(),
+    expiresAt: new Date(Date.now() + 8 * 60 * 60_000).toISOString(),
+    authenticated: true,
   };
 }

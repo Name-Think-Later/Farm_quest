@@ -3,8 +3,10 @@ import type { Coupon } from './types';
 import { consumeCoupon, fetchCouponById, fetchCoupons } from './coupons.api';
 
 type ConsumeCouponResult = {
-  success: boolean;
-  message: string;
+  couponId: string;
+  couponUsageId: string;
+  status: string;
+  consumedAt: string;
 };
 
 export function useCoupons() {

@@ -30,7 +30,7 @@ export function EmailLoginPage() {
 
     const result = await mutation.mutateAsync({ email });
     if (result.ok) {
-      setSubmittedMessage(result.data.message);
+      setSubmittedMessage('驗證碼已寄出，請前往下一步輸入。');
       navigate('/auth/otp');
     }
   };
@@ -55,6 +55,7 @@ export function EmailLoginPage() {
       </form>
       {submittedMessage ? <div className="status-card"><strong>送出結果</strong><p>{submittedMessage}</p></div> : null}
       {cooldownSeconds > 0 ? <div className="status-card"><strong>重新寄送冷卻中</strong><p>請在 {cooldownSeconds} 秒後再重新寄送。</p></div> : null}
+      {mutation.data?.ok === false ? <ErrorState message={mutation.data.message} /> : null}
       {mutation.error ? <ErrorState message={(mutation.error as Error).message} /> : null}
       <button type="button" className="text-button" onClick={() => navigate('/')}>返回入口頁</button>
     </MobileShell>
