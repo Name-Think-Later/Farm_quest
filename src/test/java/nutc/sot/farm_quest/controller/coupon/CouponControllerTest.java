@@ -61,9 +61,10 @@ class CouponControllerTest {
                         .header("Authorization", "Bearer session-token"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.coupons.length()").value(1))
-                .andExpect(jsonPath("$.coupons[0].title").value("茶香折扣券"))
-                .andExpect(jsonPath("$.coupons[0].merchantName").value("春茶小舖"));
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.coupons.length()").value(1))
+                .andExpect(jsonPath("$.data.coupons[0].title").value("茶香折扣券"))
+                .andExpect(jsonPath("$.data.coupons[0].merchantName").value("春茶小舖"));
     }
 
     @Test
@@ -98,8 +99,9 @@ class CouponControllerTest {
         mockMvc.perform(get("/api/coupons/{couponId}", couponId)
                         .header("Authorization", "Bearer session-token"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.title").value("茶香折扣券"))
-                .andExpect(jsonPath("$.merchantAddress").value("南投縣名間鄉茶園路 1 號"));
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.title").value("茶香折扣券"))
+                .andExpect(jsonPath("$.data.merchantAddress").value("南投縣名間鄉茶園路 1 號"));
     }
 
     @Test
@@ -132,8 +134,9 @@ class CouponControllerTest {
                                 {"clientConfirmedAt":"2026-06-09T10:05:00+08:00"}
                                 """))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("CONSUMED"))
-                .andExpect(jsonPath("$.couponUsageId").value("77777777-7777-7777-7777-777777777777"));
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.status").value("CONSUMED"))
+                .andExpect(jsonPath("$.data.couponUsageId").value("77777777-7777-7777-7777-777777777777"));
     }
 
     @Test

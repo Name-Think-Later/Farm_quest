@@ -80,6 +80,10 @@ class AdminKnowledgeServiceTest {
         var response = service.reindexKnowledge(new ReindexKnowledgeRequest(false));
 
         assertThat(response.accepted()).isTrue();
+        assertThat(response.requestedMode()).isEqualTo("PENDING_OR_FAILED");
+        assertThat(response.effectiveMode()).isEqualTo("PENDING");
+        assertThat(response.pendingDocumentCount()).isEqualTo(1);
+        assertThat(response.failedDocumentCount()).isEqualTo(0);
         assertThat(response.queuedDocumentCount()).isEqualTo(1);
         assertThat(response.status()).isEqualTo("REINDEX_QUEUED");
         assertThat(pendingDocument.getEmbeddingStatus()).isEqualTo("PENDING");
@@ -100,6 +104,10 @@ class AdminKnowledgeServiceTest {
 
         var response = service.reindexKnowledge(new ReindexKnowledgeRequest(false));
 
+        assertThat(response.requestedMode()).isEqualTo("PENDING_OR_FAILED");
+        assertThat(response.effectiveMode()).isEqualTo("FAILED");
+        assertThat(response.pendingDocumentCount()).isZero();
+        assertThat(response.failedDocumentCount()).isEqualTo(1);
         assertThat(response.queuedDocumentCount()).isEqualTo(1);
         assertThat(response.status()).isEqualTo("REINDEX_QUEUED");
         assertThat(failedDocument.getEmbeddingStatus()).isEqualTo("PENDING");
@@ -118,6 +126,10 @@ class AdminKnowledgeServiceTest {
         var response = service.reindexKnowledge(new ReindexKnowledgeRequest(false));
 
         assertThat(response.accepted()).isTrue();
+        assertThat(response.requestedMode()).isEqualTo("PENDING_OR_FAILED");
+        assertThat(response.effectiveMode()).isEqualTo("FAILED");
+        assertThat(response.pendingDocumentCount()).isZero();
+        assertThat(response.failedDocumentCount()).isZero();
         assertThat(response.queuedDocumentCount()).isZero();
         assertThat(response.status()).isEqualTo("REINDEX_QUEUED");
     }
@@ -133,10 +145,36 @@ class AdminKnowledgeServiceTest {
 
         var response = service.reindexKnowledge(new ReindexKnowledgeRequest(true));
 
+        assertThat(response.requestedMode()).isEqualTo("FULL_REBUILD");
+        assertThat(response.effectiveMode()).isEqualTo("FULL_REBUILD");
+        assertThat(response.pendingDocumentCount()).isZero();
+        assertThat(response.failedDocumentCount()).isZero();
         assertThat(response.status()).isEqualTo("REINDEX_QUEUED");
         assertThat(response.queuedDocumentCount()).isEqualTo(1);
         assertThat(document.getEmbeddingStatus()).isEqualTo("PENDING");
         verify(adminKnowledgeReindexService).triggerReindexAsync(List.of(document.getId()));
+    }
+
+    @Test
+    void reindexKnowledgeUsesExplicitFailedModeWhenRequested() {
+        GameEntity game = game();
+        KnowledgeDocumentEntity failedDocument = document(game, quest(game), null);
+        failedDocument.setEmbeddingStatus("FAILED");
+        when(gameRepository.findByCode("farm-quest")).thenReturn(Optional.of(game));
+        when(knowledgeDocumentRepository.findByGame_IdAndEmbeddingStatusOrderByUpdatedAtDesc(game.getId(), "PENDING"))
+                .thenReturn(List.of());
+        when(knowledgeDocumentRepository.findByGame_IdAndEmbeddingStatusOrderByUpdatedAtDesc(game.getId(), "FAILED"))
+                .thenReturn(List.of(failedDocument));
+        when(knowledgeDocumentRepository.saveAll(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        var response = service.reindexKnowledge(new ReindexKnowledgeRequest(false, "FAILED"));
+
+        assertThat(response.requestedMode()).isEqualTo("FAILED");
+        assertThat(response.effectiveMode()).isEqualTo("FAILED");
+        assertThat(response.pendingDocumentCount()).isZero();
+        assertThat(response.failedDocumentCount()).isEqualTo(1);
+        assertThat(response.queuedDocumentCount()).isEqualTo(1);
+        verify(adminKnowledgeReindexService).triggerReindexAsync(List.of(failedDocument.getId()));
     }
 
     private AuthProperties authProperties() {

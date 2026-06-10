@@ -54,8 +54,9 @@ class AuthControllerTest {
                                 """))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.email").value("visitor@example.com"))
-                .andExpect(jsonPath("$.status").value("PENDING"));
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.email").value("visitor@example.com"))
+                .andExpect(jsonPath("$.data.status").value("PENDING"));
     }
 
     @Test
@@ -76,8 +77,9 @@ class AuthControllerTest {
                                 {"email":"visitor@example.com","otp":"123456"}
                                 """))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.sessionToken").value("session-token"))
-                .andExpect(jsonPath("$.authenticated").value(true));
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.sessionToken").value("session-token"))
+                .andExpect(jsonPath("$.data.authenticated").value(true));
     }
 
     @Test
@@ -96,9 +98,10 @@ class AuthControllerTest {
         mockMvc.perform(get("/api/auth/visitor/session")
                         .header("Authorization", "Bearer session-token"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.visitorAccountId").value("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"))
-                .andExpect(jsonPath("$.email").value("visitor@example.com"))
-                .andExpect(jsonPath("$.authenticated").value(true));
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.visitorAccountId").value("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"))
+                .andExpect(jsonPath("$.data.email").value("visitor@example.com"))
+                .andExpect(jsonPath("$.data.authenticated").value(true));
     }
 
     @Test
@@ -114,8 +117,9 @@ class AuthControllerTest {
         mockMvc.perform(get("/api/auth/me")
                         .header("Authorization", "Bearer session-token"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.authenticated").value(true))
-                .andExpect(jsonPath("$.email").value("visitor@example.com"));
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.authenticated").value(true))
+                .andExpect(jsonPath("$.data.email").value("visitor@example.com"));
     }
 
     @Test
@@ -125,6 +129,7 @@ class AuthControllerTest {
         mockMvc.perform(post("/api/auth/logout")
                         .header("Authorization", "Bearer session-token"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true));
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.success").value(true));
     }
 }

@@ -38,8 +38,9 @@ class GameControllerTest {
         mockMvc.perform(get("/api/game"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.gameId").value("11111111-1111-1111-1111-111111111111"))
-                .andExpect(jsonPath("$.code").value("farm-quest-mvp"));
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.gameId").value("11111111-1111-1111-1111-111111111111"))
+                .andExpect(jsonPath("$.data.code").value("farm-quest-mvp"));
     }
 
     @Test
@@ -59,9 +60,10 @@ class GameControllerTest {
                         .header("Authorization", "Bearer session-token"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.visitorAccountId").value("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"))
-                .andExpect(jsonPath("$.currentQuestTitle").value("茶園謎題"))
-                .andExpect(jsonPath("$.progressStatus").value("STARTED"));
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.visitorAccountId").value("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"))
+                .andExpect(jsonPath("$.data.currentQuestTitle").value("茶園謎題"))
+                .andExpect(jsonPath("$.data.progressStatus").value("STARTED"));
     }
 
     @Test
@@ -80,7 +82,8 @@ class GameControllerTest {
         mockMvc.perform(get("/api/game/state")
                         .header("Authorization", "Bearer session-token"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.gpsVerified").value(true))
-                .andExpect(jsonPath("$.aiRiddleAvailable").value(false));
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.gpsVerified").value(true))
+                .andExpect(jsonPath("$.data.aiRiddleAvailable").value(false));
     }
 }

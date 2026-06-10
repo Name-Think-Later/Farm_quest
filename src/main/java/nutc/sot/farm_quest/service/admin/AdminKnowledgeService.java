@@ -2,6 +2,7 @@ package nutc.sot.farm_quest.service.admin;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import nutc.sot.farm_quest.config.AuthProperties;
@@ -33,6 +34,10 @@ public class AdminKnowledgeService {
     private static final String STATUS_INDEXED = "INDEXED";
     private static final String STATUS_FAILED = "FAILED";
     private static final String STATUS_REINDEX_QUEUED = "REINDEX_QUEUED";
+    private static final String MODE_FULL_REBUILD = "FULL_REBUILD";
+    private static final String MODE_PENDING = "PENDING";
+    private static final String MODE_FAILED = "FAILED";
+    private static final String MODE_PENDING_OR_FAILED = "PENDING_OR_FAILED";
 
     private final KnowledgeDocumentRepository knowledgeDocumentRepository;
     private final QuestRepository questRepository;
@@ -86,31 +91,88 @@ public class AdminKnowledgeService {
     @Transactional
     public ReindexKnowledgeResponse reindexKnowledge(ReindexKnowledgeRequest request) {
         GameEntity game = getCurrentGame();
-        boolean fullRebuild = request != null && request.fullRebuild();
-        List<KnowledgeDocumentEntity> documents = fullRebuild
-                ? knowledgeDocumentRepository.findByGame_IdOrderByUpdatedAtDesc(game.getId())
-                : queueTargetedReindexDocuments(game.getId());
-        if (documents.isEmpty()) {
-            return new ReindexKnowledgeResponse(true, 0, STATUS_REINDEX_QUEUED);
+        ReindexSelection selection = selectDocumentsForReindex(game.getId(), request);
+        if (selection.documents().isEmpty()) {
+            return new ReindexKnowledgeResponse(
+                    true,
+                    0,
+                    STATUS_REINDEX_QUEUED,
+                    selection.requestedMode(),
+                    selection.effectiveMode(),
+                    selection.pendingDocumentCount(),
+                    selection.failedDocumentCount()
+            );
         }
 
         OffsetDateTime now = OffsetDateTime.now();
-        for (KnowledgeDocumentEntity document : documents) {
+        for (KnowledgeDocumentEntity document : selection.documents()) {
             document.setEmbeddingStatus(STATUS_PENDING);
             document.setIndexedAt(null);
             document.setUpdatedAt(now);
         }
-        knowledgeDocumentRepository.saveAll(documents);
-        adminKnowledgeReindexService.triggerReindexAsync(documents.stream().map(KnowledgeDocumentEntity::getId).toList());
-        return new ReindexKnowledgeResponse(true, documents.size(), STATUS_REINDEX_QUEUED);
+        knowledgeDocumentRepository.saveAll(selection.documents());
+        adminKnowledgeReindexService.triggerReindexAsync(selection.documents().stream().map(KnowledgeDocumentEntity::getId).toList());
+        return new ReindexKnowledgeResponse(
+                true,
+                selection.documents().size(),
+                STATUS_REINDEX_QUEUED,
+                selection.requestedMode(),
+                selection.effectiveMode(),
+                selection.pendingDocumentCount(),
+                selection.failedDocumentCount()
+        );
     }
 
-    private List<KnowledgeDocumentEntity> queueTargetedReindexDocuments(UUID gameId) {
+    private ReindexSelection selectDocumentsForReindex(UUID gameId, ReindexKnowledgeRequest request) {
+        String requestedMode = resolveRequestedMode(request);
         List<KnowledgeDocumentEntity> pendingDocuments = knowledgeDocumentRepository.findByGame_IdAndEmbeddingStatusOrderByUpdatedAtDesc(gameId, STATUS_PENDING);
-        if (!pendingDocuments.isEmpty()) {
-            return pendingDocuments;
+        List<KnowledgeDocumentEntity> failedDocuments = knowledgeDocumentRepository.findByGame_IdAndEmbeddingStatusOrderByUpdatedAtDesc(gameId, STATUS_FAILED);
+        List<KnowledgeDocumentEntity> documents;
+        String effectiveMode = requestedMode;
+
+        switch (requestedMode) {
+            case MODE_FULL_REBUILD -> documents = knowledgeDocumentRepository.findByGame_IdOrderByUpdatedAtDesc(gameId);
+            case MODE_PENDING -> documents = pendingDocuments;
+            case MODE_FAILED -> documents = failedDocuments;
+            default -> {
+                if (!pendingDocuments.isEmpty()) {
+                    documents = pendingDocuments;
+                    effectiveMode = MODE_PENDING;
+                } else {
+                    documents = failedDocuments;
+                    effectiveMode = MODE_FAILED;
+                }
+            }
         }
-        return knowledgeDocumentRepository.findByGame_IdAndEmbeddingStatusOrderByUpdatedAtDesc(gameId, STATUS_FAILED);
+
+        return new ReindexSelection(
+                documents,
+                requestedMode,
+                effectiveMode,
+                pendingDocuments.size(),
+                failedDocuments.size()
+        );
+    }
+
+    private String resolveRequestedMode(ReindexKnowledgeRequest request) {
+        if (request == null) {
+            return MODE_PENDING_OR_FAILED;
+        }
+        if (request.fullRebuild()) {
+            return MODE_FULL_REBUILD;
+        }
+        if (!StringUtils.hasText(request.mode())) {
+            return MODE_PENDING_OR_FAILED;
+        }
+
+        String normalizedMode = request.mode().trim().toUpperCase(Locale.ROOT);
+        if (MODE_PENDING.equals(normalizedMode)
+                || MODE_FAILED.equals(normalizedMode)
+                || MODE_PENDING_OR_FAILED.equals(normalizedMode)
+                || MODE_FULL_REBUILD.equals(normalizedMode)) {
+            return normalizedMode;
+        }
+        throw new QuestException(QuestErrorCode.ADMIN_INVALID_REQUEST, HttpStatus.BAD_REQUEST, "Unsupported reindex mode");
     }
 
     private int nextVersion(QuestEntity quest, LocationEntity location) {
@@ -176,5 +238,14 @@ public class AdminKnowledgeService {
                 document.getIndexedAt(),
                 document.getUpdatedAt()
         );
+    }
+
+    private record ReindexSelection(
+            List<KnowledgeDocumentEntity> documents,
+            String requestedMode,
+            String effectiveMode,
+            int pendingDocumentCount,
+            int failedDocumentCount
+    ) {
     }
 }

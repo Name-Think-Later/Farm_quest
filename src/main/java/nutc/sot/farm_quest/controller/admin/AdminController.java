@@ -26,6 +26,7 @@ import nutc.sot.farm_quest.dto.admin.KnowledgeDocumentRequest;
 import nutc.sot.farm_quest.dto.admin.KnowledgeDocumentResponse;
 import nutc.sot.farm_quest.dto.admin.ReindexKnowledgeRequest;
 import nutc.sot.farm_quest.dto.admin.ReindexKnowledgeResponse;
+import nutc.sot.farm_quest.dto.common.ApiResponse;
 import nutc.sot.farm_quest.service.admin.AdminAiRiddleService;
 import nutc.sot.farm_quest.service.admin.AdminAuthService;
 import nutc.sot.farm_quest.service.admin.AdminCouponService;
@@ -56,115 +57,115 @@ public class AdminController {
     private final AdminStatisticsService adminStatisticsService;
 
     @GetMapping("/quests")
-    public ResponseEntity<AdminQuestListResponse> getQuests(HttpServletRequest request) {
+    public ResponseEntity<ApiResponse<AdminQuestListResponse>> getQuests(HttpServletRequest request) {
         requireAdmin(request);
-        return ResponseEntity.ok(adminQuestService.getQuests());
+        return ResponseEntity.ok(ApiResponse.success(adminQuestService.getQuests()));
     }
 
     @PostMapping("/quests")
-    public ResponseEntity<AdminQuestResponse> createQuest(@Valid @RequestBody AdminQuestRequest request,
-                                                          HttpServletRequest httpServletRequest) {
+    public ResponseEntity<ApiResponse<AdminQuestResponse>> createQuest(@Valid @RequestBody AdminQuestRequest request,
+                                                                       HttpServletRequest httpServletRequest) {
         requireAdmin(httpServletRequest);
-        return ResponseEntity.ok(adminQuestService.createQuest(request));
+        return ResponseEntity.ok(ApiResponse.success(adminQuestService.createQuest(request)));
     }
 
     @PutMapping("/quests/{questId}")
-    public ResponseEntity<AdminQuestResponse> updateQuest(@PathVariable UUID questId,
-                                                          @Valid @RequestBody AdminQuestRequest request,
-                                                          HttpServletRequest httpServletRequest) {
+    public ResponseEntity<ApiResponse<AdminQuestResponse>> updateQuest(@PathVariable UUID questId,
+                                                                       @Valid @RequestBody AdminQuestRequest request,
+                                                                       HttpServletRequest httpServletRequest) {
         requireAdmin(httpServletRequest);
-        return ResponseEntity.ok(adminQuestService.updateQuest(questId, request));
+        return ResponseEntity.ok(ApiResponse.success(adminQuestService.updateQuest(questId, request)));
     }
 
     @GetMapping("/locations")
-    public ResponseEntity<AdminLocationListResponse> getLocations(HttpServletRequest request) {
+    public ResponseEntity<ApiResponse<AdminLocationListResponse>> getLocations(HttpServletRequest request) {
         requireAdmin(request);
-        return ResponseEntity.ok(adminLocationService.getLocations());
+        return ResponseEntity.ok(ApiResponse.success(adminLocationService.getLocations()));
     }
 
     @PutMapping("/locations/{locationId}/hotspot")
-    public ResponseEntity<AdminLocationResponse> updateLocationHotspot(@PathVariable UUID locationId,
-                                                                       @Valid @RequestBody AdminLocationHotspotRequest request,
-                                                                       HttpServletRequest httpServletRequest) {
+    public ResponseEntity<ApiResponse<AdminLocationResponse>> updateLocationHotspot(@PathVariable UUID locationId,
+                                                                                     @Valid @RequestBody AdminLocationHotspotRequest request,
+                                                                                     HttpServletRequest httpServletRequest) {
         requireAdmin(httpServletRequest);
-        return ResponseEntity.ok(adminLocationService.updateHotspot(locationId, request));
+        return ResponseEntity.ok(ApiResponse.success(adminLocationService.updateHotspot(locationId, request)));
     }
 
     @GetMapping("/ai-riddles")
-    public ResponseEntity<AdminAiRiddleConfigListResponse> getAiRiddles(HttpServletRequest request) {
+    public ResponseEntity<ApiResponse<AdminAiRiddleConfigListResponse>> getAiRiddles(HttpServletRequest request) {
         requireAdmin(request);
-        return ResponseEntity.ok(adminAiRiddleService.getAiRiddles());
+        return ResponseEntity.ok(ApiResponse.success(adminAiRiddleService.getAiRiddles()));
     }
 
     @PutMapping("/ai-riddles/{questId}")
-    public ResponseEntity<AdminAiRiddleConfigResponse> updateAiRiddle(@PathVariable UUID questId,
-                                                                      @Valid @RequestBody AdminAiRiddleConfigRequest request,
-                                                                      HttpServletRequest httpServletRequest) {
+    public ResponseEntity<ApiResponse<AdminAiRiddleConfigResponse>> updateAiRiddle(@PathVariable UUID questId,
+                                                                                    @Valid @RequestBody AdminAiRiddleConfigRequest request,
+                                                                                    HttpServletRequest httpServletRequest) {
         requireAdmin(httpServletRequest);
-        return ResponseEntity.ok(adminAiRiddleService.upsertAiRiddleConfig(questId, request));
+        return ResponseEntity.ok(ApiResponse.success(adminAiRiddleService.upsertAiRiddleConfig(questId, request)));
     }
 
     @GetMapping("/coupon-campaigns")
-    public ResponseEntity<AdminCouponCampaignListResponse> getCouponCampaigns(HttpServletRequest request) {
+    public ResponseEntity<ApiResponse<AdminCouponCampaignListResponse>> getCouponCampaigns(HttpServletRequest request) {
         requireAdmin(request);
-        return ResponseEntity.ok(adminCouponService.getCouponCampaigns());
+        return ResponseEntity.ok(ApiResponse.success(adminCouponService.getCouponCampaigns()));
     }
 
     @PostMapping("/coupon-campaigns")
-    public ResponseEntity<AdminCouponCampaignResponse> createCouponCampaign(@Valid @RequestBody AdminCouponCampaignRequest request,
-                                                                            HttpServletRequest httpServletRequest) {
+    public ResponseEntity<ApiResponse<AdminCouponCampaignResponse>> createCouponCampaign(@Valid @RequestBody AdminCouponCampaignRequest request,
+                                                                                          HttpServletRequest httpServletRequest) {
         requireAdmin(httpServletRequest);
-        return ResponseEntity.ok(adminCouponService.createCouponCampaign(request));
+        return ResponseEntity.ok(ApiResponse.success(adminCouponService.createCouponCampaign(request)));
     }
 
     @GetMapping("/knowledge-documents")
-    public ResponseEntity<KnowledgeDocumentListResponse> getKnowledgeDocuments(HttpServletRequest request) {
+    public ResponseEntity<ApiResponse<KnowledgeDocumentListResponse>> getKnowledgeDocuments(HttpServletRequest request) {
         requireAdmin(request);
-        return ResponseEntity.ok(adminKnowledgeService.getKnowledgeDocuments());
+        return ResponseEntity.ok(ApiResponse.success(adminKnowledgeService.getKnowledgeDocuments()));
     }
 
     @PostMapping("/knowledge-documents")
-    public ResponseEntity<KnowledgeDocumentResponse> createKnowledgeDocument(@Valid @RequestBody KnowledgeDocumentRequest request,
-                                                                             HttpServletRequest httpServletRequest) {
+    public ResponseEntity<ApiResponse<KnowledgeDocumentResponse>> createKnowledgeDocument(@Valid @RequestBody KnowledgeDocumentRequest request,
+                                                                                           HttpServletRequest httpServletRequest) {
         requireAdmin(httpServletRequest);
-        return ResponseEntity.ok(adminKnowledgeService.createKnowledgeDocument(request));
+        return ResponseEntity.ok(ApiResponse.success(adminKnowledgeService.createKnowledgeDocument(request)));
     }
 
     @PostMapping("/knowledge-documents/reindex")
-    public ResponseEntity<ReindexKnowledgeResponse> reindexKnowledge(@RequestBody(required = false) ReindexKnowledgeRequest request,
-                                                                     HttpServletRequest httpServletRequest) {
+    public ResponseEntity<ApiResponse<ReindexKnowledgeResponse>> reindexKnowledge(@RequestBody(required = false) ReindexKnowledgeRequest request,
+                                                                                   HttpServletRequest httpServletRequest) {
         requireAdmin(httpServletRequest);
-        return ResponseEntity.ok(adminKnowledgeService.reindexKnowledge(request == null ? new ReindexKnowledgeRequest(false) : request));
+        return ResponseEntity.ok(ApiResponse.success(adminKnowledgeService.reindexKnowledge(request == null ? new ReindexKnowledgeRequest(false) : request)));
     }
 
     @GetMapping("/coupons")
-    public ResponseEntity<AdminCouponListResponse> getCoupons(HttpServletRequest request) {
+    public ResponseEntity<ApiResponse<AdminCouponListResponse>> getCoupons(HttpServletRequest request) {
         requireAdmin(request);
-        return ResponseEntity.ok(adminCouponService.getCoupons());
+        return ResponseEntity.ok(ApiResponse.success(adminCouponService.getCoupons()));
     }
 
     @GetMapping("/coupon-usages")
-    public ResponseEntity<AdminCouponUsageListResponse> getCouponUsages(HttpServletRequest request) {
+    public ResponseEntity<ApiResponse<AdminCouponUsageListResponse>> getCouponUsages(HttpServletRequest request) {
         requireAdmin(request);
-        return ResponseEntity.ok(adminCouponService.getCouponUsages());
+        return ResponseEntity.ok(ApiResponse.success(adminCouponService.getCouponUsages()));
     }
 
     @GetMapping("/stats/overview")
-    public ResponseEntity<AdminOverviewStatsResponse> getOverviewStats(HttpServletRequest request) {
+    public ResponseEntity<ApiResponse<AdminOverviewStatsResponse>> getOverviewStats(HttpServletRequest request) {
         requireAdmin(request);
-        return ResponseEntity.ok(adminStatisticsService.getOverviewStats());
+        return ResponseEntity.ok(ApiResponse.success(adminStatisticsService.getOverviewStats()));
     }
 
     @GetMapping("/stats/quests")
-    public ResponseEntity<AdminQuestCompletionStatsListResponse> getQuestStats(HttpServletRequest request) {
+    public ResponseEntity<ApiResponse<AdminQuestCompletionStatsListResponse>> getQuestStats(HttpServletRequest request) {
         requireAdmin(request);
-        return ResponseEntity.ok(adminStatisticsService.getQuestCompletionStats());
+        return ResponseEntity.ok(ApiResponse.success(adminStatisticsService.getQuestCompletionStats()));
     }
 
     @GetMapping("/stats/coupons")
-    public ResponseEntity<AdminCouponCampaignStatsListResponse> getCouponStats(HttpServletRequest request) {
+    public ResponseEntity<ApiResponse<AdminCouponCampaignStatsListResponse>> getCouponStats(HttpServletRequest request) {
         requireAdmin(request);
-        return ResponseEntity.ok(adminStatisticsService.getCouponCampaignStats());
+        return ResponseEntity.ok(ApiResponse.success(adminStatisticsService.getCouponCampaignStats()));
     }
 
     private void requireAdmin(HttpServletRequest request) {

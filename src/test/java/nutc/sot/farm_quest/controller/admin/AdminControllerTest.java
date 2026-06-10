@@ -74,8 +74,9 @@ class AdminControllerTest {
                         .header("Authorization", "Bearer admin-secret"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.quests.length()").value(1))
-                .andExpect(jsonPath("$.quests[0].code").value("tea-quest-01"));
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.quests.length()").value(1))
+                .andExpect(jsonPath("$.data.quests[0].code").value("tea-quest-01"));
 
         verify(adminAuthService).requireAdmin("admin-secret");
     }
@@ -105,15 +106,20 @@ class AdminControllerTest {
 
     @Test
     void reindexKnowledgeUsesTargetedReindexWhenRequestBodyIsMissing() throws Exception {
-        when(adminKnowledgeService.reindexKnowledge(any())).thenReturn(new ReindexKnowledgeResponse(true, 0, "REINDEX_QUEUED"));
+        when(adminKnowledgeService.reindexKnowledge(any())).thenReturn(new ReindexKnowledgeResponse(true, 0, "REINDEX_QUEUED", "PENDING_OR_FAILED", "FAILED", 0, 0));
 
         mockMvc.perform(post("/api/admin/knowledge-documents/reindex")
                         .header("Authorization", "Bearer admin-secret"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.accepted").value(true))
-                .andExpect(jsonPath("$.queuedDocumentCount").value(0))
-                .andExpect(jsonPath("$.status").value("REINDEX_QUEUED"));
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.accepted").value(true))
+                .andExpect(jsonPath("$.data.queuedDocumentCount").value(0))
+                .andExpect(jsonPath("$.data.status").value("REINDEX_QUEUED"))
+                .andExpect(jsonPath("$.data.requestedMode").value("PENDING_OR_FAILED"))
+                .andExpect(jsonPath("$.data.effectiveMode").value("FAILED"))
+                .andExpect(jsonPath("$.data.pendingDocumentCount").value(0))
+                .andExpect(jsonPath("$.data.failedDocumentCount").value(0));
 
         verify(adminAuthService).requireAdmin("admin-secret");
         verify(adminKnowledgeService).reindexKnowledge(any());
@@ -126,8 +132,9 @@ class AdminControllerTest {
         mockMvc.perform(get("/api/admin/stats/overview")
                         .header("Authorization", "Bearer admin-secret"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.completedQuestCount").value(5))
-                .andExpect(jsonPath("$.issuedCouponCount").value(3))
-                .andExpect(jsonPath("$.usedCouponCount").value(2));
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.completedQuestCount").value(5))
+                .andExpect(jsonPath("$.data.issuedCouponCount").value(3))
+                .andExpect(jsonPath("$.data.usedCouponCount").value(2));
     }
 }

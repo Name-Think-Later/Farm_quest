@@ -39,9 +39,10 @@ class SystemControllerTest {
         mockMvc.perform(get("/api/system/health"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.status").value("UP"))
-                .andExpect(jsonPath("$.application").value("Farm quest"))
-                .andExpect(jsonPath("$.seedDataReady").value(true));
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.status").value("UP"))
+                .andExpect(jsonPath("$.data.application").value("Farm quest"))
+                .andExpect(jsonPath("$.data.seedDataReady").value(true));
     }
 
     @Test
@@ -61,12 +62,13 @@ class SystemControllerTest {
         mockMvc.perform(get("/api/system/dependencies"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.status").value("DOWN"))
-                .andExpect(jsonPath("$.dependencies.length()").value(5))
-                .andExpect(jsonPath("$.dependencies[1].name").value("Redis"))
-                .andExpect(jsonPath("$.dependencies[1].status").value("DOWN"))
-                .andExpect(jsonPath("$.dependencies[3].name").value("AI Chat Model"))
-                .andExpect(jsonPath("$.dependencies[4].name").value("AI Embedding Model"));
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.status").value("DOWN"))
+                .andExpect(jsonPath("$.data.dependencies.length()").value(5))
+                .andExpect(jsonPath("$.data.dependencies[1].name").value("Redis"))
+                .andExpect(jsonPath("$.data.dependencies[1].status").value("DOWN"))
+                .andExpect(jsonPath("$.data.dependencies[3].name").value("AI Chat Model"))
+                .andExpect(jsonPath("$.data.dependencies[4].name").value("AI Embedding Model"));
     }
 
     @Test
@@ -83,11 +85,12 @@ class SystemControllerTest {
         mockMvc.perform(get("/api/system/dependencies/probe"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.status").value("UP"))
-                .andExpect(jsonPath("$.dependencies.length()").value(2))
-                .andExpect(jsonPath("$.dependencies[0].name").value("AI Chat Model"))
-                .andExpect(jsonPath("$.dependencies[0].status").value("UP"))
-                .andExpect(jsonPath("$.dependencies[1].name").value("AI Embedding Model"))
-                .andExpect(jsonPath("$.dependencies[1].status").value("UP"));
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.status").value("UP"))
+                .andExpect(jsonPath("$.data.dependencies.length()").value(2))
+                .andExpect(jsonPath("$.data.dependencies[0].name").value("AI Chat Model"))
+                .andExpect(jsonPath("$.data.dependencies[0].status").value("UP"))
+                .andExpect(jsonPath("$.data.dependencies[1].name").value("AI Embedding Model"))
+                .andExpect(jsonPath("$.data.dependencies[1].status").value("UP"));
     }
 }

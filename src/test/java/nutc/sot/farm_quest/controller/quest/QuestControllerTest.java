@@ -65,9 +65,10 @@ class QuestControllerTest {
                         .header("Authorization", "Bearer session-token"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.quests.length()").value(1))
-                .andExpect(jsonPath("$.quests[0].title").value("茶園謎題"))
-                .andExpect(jsonPath("$.quests[0].status").value("STARTED"));
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.quests.length()").value(1))
+                .andExpect(jsonPath("$.data.quests[0].title").value("茶園謎題"))
+                .andExpect(jsonPath("$.data.quests[0].status").value("STARTED"));
     }
 
     @Test
@@ -97,8 +98,9 @@ class QuestControllerTest {
         mockMvc.perform(get("/api/quests/current")
                         .header("Authorization", "Bearer session-token"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.current").value(true))
-                .andExpect(jsonPath("$.title").value("茶園謎題"));
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.current").value(true))
+                .andExpect(jsonPath("$.data.title").value("茶園謎題"));
     }
 
     @Test
@@ -114,8 +116,9 @@ class QuestControllerTest {
         mockMvc.perform(post("/api/quests/{questId}/start", questId)
                         .header("Authorization", "Bearer session-token"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.questId").value("22222222-2222-2222-2222-222222222222"))
-                .andExpect(jsonPath("$.status").value("STARTED"));
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.questId").value("22222222-2222-2222-2222-222222222222"))
+                .andExpect(jsonPath("$.data.status").value("STARTED"));
     }
 
     @Test
@@ -133,8 +136,9 @@ class QuestControllerTest {
         mockMvc.perform(get("/api/quests/{questId}/location-hint", questId)
                         .header("Authorization", "Bearer session-token"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.locationName").value("主要茶園定位點"))
-                .andExpect(jsonPath("$.maxAccuracyMeters").value(50));
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.locationName").value("主要茶園定位點"))
+                .andExpect(jsonPath("$.data.maxAccuracyMeters").value(50));
     }
 
     @Test
@@ -158,8 +162,9 @@ class QuestControllerTest {
                                 {"permissionDenied":false,"latitude":24.147736,"longitude":120.673648,"accuracyMeters":10.0}
                                 """))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.passed").value(true))
-                .andExpect(jsonPath("$.status").value("LOCATION_VERIFIED"));
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.passed").value(true))
+                .andExpect(jsonPath("$.data.status").value("LOCATION_VERIFIED"));
     }
 
     @Test
@@ -215,8 +220,9 @@ class QuestControllerTest {
         mockMvc.perform(get("/api/quests/{questId}/ai-riddle/messages", questId)
                         .header("Authorization", "Bearer session-token"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.conversationId").value("77777777-7777-7777-7777-777777777777"))
-                .andExpect(jsonPath("$.messages.length()").value(1));
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.conversationId").value("77777777-7777-7777-7777-777777777777"))
+                .andExpect(jsonPath("$.data.messages.length()").value(1));
     }
 
     @Test
@@ -241,8 +247,9 @@ class QuestControllerTest {
                                 {"content":"提示一下"}
                                 """))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.replyContent").value("請再想想與茶香有關的線索。"))
-                .andExpect(jsonPath("$.questCompleted").value(false));
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.replyContent").value("請再想想與茶香有關的線索。"))
+                .andExpect(jsonPath("$.data.questCompleted").value(false));
     }
 
     @Test

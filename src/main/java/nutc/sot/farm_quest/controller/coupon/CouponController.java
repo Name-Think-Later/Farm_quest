@@ -3,6 +3,7 @@ package nutc.sot.farm_quest.controller.coupon;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import nutc.sot.farm_quest.dto.common.ApiResponse;
 import nutc.sot.farm_quest.dto.coupon.ConsumeCouponRequest;
 import nutc.sot.farm_quest.dto.coupon.ConsumeCouponResponse;
 import nutc.sot.farm_quest.dto.coupon.CouponDetailResponse;
@@ -26,20 +27,20 @@ public class CouponController {
     private final CouponUsageService couponUsageService;
 
     @GetMapping("/my")
-    public ResponseEntity<CouponListResponse> getMyCoupons(HttpServletRequest request) {
-        return ResponseEntity.ok(couponService.getMyCoupons(extractBearerToken(request)));
+    public ResponseEntity<ApiResponse<CouponListResponse>> getMyCoupons(HttpServletRequest request) {
+        return ResponseEntity.ok(ApiResponse.success(couponService.getMyCoupons(extractBearerToken(request))));
     }
 
     @GetMapping("/{couponId}")
-    public ResponseEntity<CouponDetailResponse> getCoupon(@PathVariable UUID couponId, HttpServletRequest request) {
-        return ResponseEntity.ok(couponService.getCoupon(extractBearerToken(request), couponId));
+    public ResponseEntity<ApiResponse<CouponDetailResponse>> getCoupon(@PathVariable UUID couponId, HttpServletRequest request) {
+        return ResponseEntity.ok(ApiResponse.success(couponService.getCoupon(extractBearerToken(request), couponId)));
     }
 
     @PostMapping("/{couponId}/consume")
-    public ResponseEntity<ConsumeCouponResponse> consumeCoupon(@PathVariable UUID couponId,
-                                                               @RequestBody(required = false) ConsumeCouponRequest request,
-                                                               HttpServletRequest httpServletRequest) {
-        return ResponseEntity.ok(couponUsageService.consumeCoupon(extractBearerToken(httpServletRequest), couponId, request));
+    public ResponseEntity<ApiResponse<ConsumeCouponResponse>> consumeCoupon(@PathVariable UUID couponId,
+                                                                            @RequestBody(required = false) ConsumeCouponRequest request,
+                                                                            HttpServletRequest httpServletRequest) {
+        return ResponseEntity.ok(ApiResponse.success(couponUsageService.consumeCoupon(extractBearerToken(httpServletRequest), couponId, request)));
     }
 
     private String extractBearerToken(HttpServletRequest request) {

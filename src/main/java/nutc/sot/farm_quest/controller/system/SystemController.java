@@ -1,6 +1,7 @@
 package nutc.sot.farm_quest.controller.system;
 
 import lombok.RequiredArgsConstructor;
+import nutc.sot.farm_quest.dto.common.ApiResponse;
 import nutc.sot.farm_quest.dto.system.DependencyStatusResponse;
 import nutc.sot.farm_quest.dto.system.HealthResponse;
 import nutc.sot.farm_quest.service.system.DependencyCheckService;
@@ -19,17 +20,17 @@ public class SystemController {
     private final DependencyCheckService dependencyCheckService;
 
     @GetMapping("/health")
-    public ResponseEntity<HealthResponse> getHealth() {
-        return ResponseEntity.ok(healthService.getHealth());
+    public ResponseEntity<ApiResponse<HealthResponse>> getHealth() {
+        return ResponseEntity.ok(ApiResponse.success(healthService.getHealth()));
     }
 
     @GetMapping("/dependencies")
-    public ResponseEntity<DependencyStatusResponse> getDependencies() {
-        return ResponseEntity.ok(dependencyCheckService.checkDependencies());
+    public ResponseEntity<ApiResponse<DependencyStatusResponse>> getDependencies() {
+        return ResponseEntity.ok(ApiResponse.success(dependencyCheckService.checkDependencies()));
     }
 
     @GetMapping("/dependencies/probe")
-    public ResponseEntity<DependencyStatusResponse> probeDependencies() {
-        return ResponseEntity.ok(dependencyCheckService.probeAiDependencies());
+    public ResponseEntity<ApiResponse<DependencyStatusResponse>> probeDependencies() {
+        return ResponseEntity.ok(ApiResponse.success(dependencyCheckService.probeAiDependencies()));
     }
 }

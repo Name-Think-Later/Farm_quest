@@ -9,6 +9,7 @@ import nutc.sot.farm_quest.dto.auth.EmailVerificationRequest;
 import nutc.sot.farm_quest.dto.auth.EmailVerificationResponse;
 import nutc.sot.farm_quest.dto.auth.LogoutResponse;
 import nutc.sot.farm_quest.dto.auth.VisitorSessionResponse;
+import nutc.sot.farm_quest.dto.common.ApiResponse;
 import nutc.sot.farm_quest.service.auth.EmailVerificationService;
 import nutc.sot.farm_quest.service.auth.SessionService;
 import org.springframework.http.ResponseEntity;
@@ -27,46 +28,46 @@ public class AuthController {
     private final SessionService sessionService;
 
     @PostMapping("/visitor/email-verifications")
-    public ResponseEntity<EmailVerificationResponse> createEmailVerification(@Valid @RequestBody EmailVerificationRequest request,
-                                                                             HttpServletRequest httpServletRequest) {
-        return ResponseEntity.ok(emailVerificationService.createVerification(
+    public ResponseEntity<ApiResponse<EmailVerificationResponse>> createEmailVerification(@Valid @RequestBody EmailVerificationRequest request,
+                                                                                           HttpServletRequest httpServletRequest) {
+        return ResponseEntity.ok(ApiResponse.success(emailVerificationService.createVerification(
                 request,
                 httpServletRequest.getRemoteAddr(),
                 httpServletRequest.getHeader("User-Agent")
-        ));
+        )));
     }
 
     @PostMapping("/visitor/email-verifications/confirm")
-    public ResponseEntity<VisitorSessionResponse> confirmEmailVerification(@Valid @RequestBody ConfirmEmailVerificationRequest request,
-                                                                           HttpServletRequest httpServletRequest) {
-        return ResponseEntity.ok(emailVerificationService.confirmVerification(
+    public ResponseEntity<ApiResponse<VisitorSessionResponse>> confirmEmailVerification(@Valid @RequestBody ConfirmEmailVerificationRequest request,
+                                                                                         HttpServletRequest httpServletRequest) {
+        return ResponseEntity.ok(ApiResponse.success(emailVerificationService.confirmVerification(
                 request,
                 httpServletRequest.getRemoteAddr(),
                 httpServletRequest.getHeader("User-Agent")
-        ));
+        )));
     }
 
     @GetMapping("/visitor/session")
-    public ResponseEntity<VisitorSessionResponse> getCurrentSession(HttpServletRequest httpServletRequest) {
+    public ResponseEntity<ApiResponse<VisitorSessionResponse>> getCurrentSession(HttpServletRequest httpServletRequest) {
         var session = sessionService.requireActiveSession(extractBearerToken(httpServletRequest));
-        return ResponseEntity.ok(new VisitorSessionResponse(
+        return ResponseEntity.ok(ApiResponse.success(new VisitorSessionResponse(
                 session.getVisitorAccount().getId(),
                 session.getVisitorAccount().getEmailNormalized(),
                 null,
                 session.getIssuedAt(),
                 session.getExpiresAt(),
                 true
-        ));
+        )));
     }
 
     @GetMapping("/me")
-    public ResponseEntity<CurrentUserResponse> getCurrentUser(HttpServletRequest httpServletRequest) {
-        return ResponseEntity.ok(sessionService.getCurrentUser(extractBearerToken(httpServletRequest)));
+    public ResponseEntity<ApiResponse<CurrentUserResponse>> getCurrentUser(HttpServletRequest httpServletRequest) {
+        return ResponseEntity.ok(ApiResponse.success(sessionService.getCurrentUser(extractBearerToken(httpServletRequest))));
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<LogoutResponse> logout(HttpServletRequest httpServletRequest) {
-        return ResponseEntity.ok(sessionService.logout(extractBearerToken(httpServletRequest)));
+    public ResponseEntity<ApiResponse<LogoutResponse>> logout(HttpServletRequest httpServletRequest) {
+        return ResponseEntity.ok(ApiResponse.success(sessionService.logout(extractBearerToken(httpServletRequest))));
     }
 
     private String extractBearerToken(HttpServletRequest request) {

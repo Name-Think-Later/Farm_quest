@@ -2,6 +2,7 @@ package nutc.sot.farm_quest.controller.game;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import nutc.sot.farm_quest.dto.common.ApiResponse;
 import nutc.sot.farm_quest.dto.game.GameEntryResponse;
 import nutc.sot.farm_quest.dto.game.GameStateResponse;
 import nutc.sot.farm_quest.service.game.GameService;
@@ -18,13 +19,13 @@ public class GameController {
     private final GameService gameService;
 
     @GetMapping
-    public ResponseEntity<GameEntryResponse> getGame() {
-        return ResponseEntity.ok(gameService.getActiveGame());
+    public ResponseEntity<ApiResponse<GameEntryResponse>> getGame() {
+        return ResponseEntity.ok(ApiResponse.success(gameService.getActiveGame()));
     }
 
     @GetMapping("/state")
-    public ResponseEntity<GameStateResponse> getGameState(HttpServletRequest request) {
-        return ResponseEntity.ok(gameService.getGameState(extractBearerToken(request)));
+    public ResponseEntity<ApiResponse<GameStateResponse>> getGameState(HttpServletRequest request) {
+        return ResponseEntity.ok(ApiResponse.success(gameService.getGameState(extractBearerToken(request))));
     }
 
     private String extractBearerToken(HttpServletRequest request) {
