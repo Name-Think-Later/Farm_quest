@@ -1,4 +1,51 @@
 services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: farm-quest-backend
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: jdbc:postgresql://postgres:5432/farm_quest
+      DATABASE_USERNAME: "${DATABASE_USERNAME:-farm_quest}"
+      DATABASE_PASSWORD: "${DATABASE_PASSWORD:-farm_quest}"
+      REDIS_URL: redis://redis:6379
+      QDRANT_URL: http://qdrant:6333
+      QDRANT_HOST: qdrant
+      QDRANT_GRPC_PORT: 6334
+      QDRANT_COLLECTION_NAME: "${QDRANT_COLLECTION_NAME:-knowledge-documents}"
+      QDRANT_VECTOR_SIZE: "${QDRANT_VECTOR_SIZE:-1536}"
+      FARM_QUEST_ADMIN_AUTH_SECRET: "${FARM_QUEST_ADMIN_AUTH_SECRET:-change-me-admin-secret}"
+      PROXY_BASE_URL: "${PROXY_BASE_URL:-https://api.openai.com}"
+      PROXY_API_KEY: "${PROXY_API_KEY:-change-me-openai-api-key}"
+      SPRING_AI_CHAT_MODEL: "${SPRING_AI_CHAT_MODEL:-gpt-4o-mini}"
+      EMBEDDING_BASE_URL: "${EMBEDDING_BASE_URL:-https://api.openai.com}"
+      EMBEDDING_API_KEY: "${EMBEDDING_API_KEY:-change-me-openai-api-key}"
+      SPRING_AI_EMBEDDING_MODEL: "${SPRING_AI_EMBEDDING_MODEL:-text-embedding-3-small}"
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_PUBLIC_API_BASE_URL: "${VITE_PUBLIC_API_BASE_URL:-http://localhost:8080}"
+        VITE_USE_MOCK_API: "${VITE_USE_MOCK_API:-true}"
+    container_name: farm-quest-frontend
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-5173}:80"
+    depends_on:
+      - backend
+
   postgres:
     image: postgres:16
     container_name: farm-quest-postgres
@@ -42,7 +89,7 @@ services:
     volumes:
       - qdrant-data:/qdrant/storage
     healthcheck:
-      test: [ "CMD", "curl", "-fsS", "http://localhost:6333/healthz" ]
+      test: [ "CMD-SHELL", "timeout 5 bash -c '</dev/tcp/localhost/6333'" ]
       interval: 10s
       timeout: 5s
       retries: 10
