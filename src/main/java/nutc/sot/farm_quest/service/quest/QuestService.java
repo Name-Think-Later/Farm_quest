@@ -54,8 +54,8 @@ public class QuestService {
                         .map(progress -> !"COMPLETED".equals(progress.getStatus()))
                         .orElse(true))
                 .min(Comparator.comparing(QuestEntity::getSortOrder))
-                .orElseThrow(() -> new QuestException(QuestErrorCode.QUEST_NOT_FOUND, HttpStatus.NOT_FOUND, "No current quest found"));
-        return toQuestDetail(session, currentQuest);
+                .orElse(null);
+        return currentQuest == null ? null : toQuestDetail(session, currentQuest);
     }
 
     @Transactional

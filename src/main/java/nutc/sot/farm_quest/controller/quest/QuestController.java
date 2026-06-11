@@ -39,7 +39,8 @@ public class QuestController {
 
     @GetMapping("/current")
     public ResponseEntity<ApiResponse<QuestDetailResponse>> getCurrentQuest(HttpServletRequest request) {
-        return ResponseEntity.ok(ApiResponse.success(questService.getCurrentQuest(extractBearerToken(request))));
+        QuestDetailResponse quest = questService.getCurrentQuest(extractBearerToken(request));
+        return ResponseEntity.ok(ApiResponse.success(quest));
     }
 
     @PostMapping("/{questId}/start")

@@ -3,6 +3,7 @@ import { MobileShell } from '../../components/layout/MobileShell';
 import { NetworkBanner } from '../../components/feedback/NetworkBanner';
 import { LoadingState } from '../../components/feedback/LoadingState';
 import { ErrorState } from '../../components/feedback/ErrorState';
+import { InfoState } from '../../components/feedback/InfoState';
 import { useCurrentQuest, useLocationHint, useStartQuest } from '../../features/quests/useQuestFlows';
 import { toQuestProgress } from '../../features/quests/types';
 
@@ -45,11 +46,12 @@ export function CurrentQuestPage() {
       {query.error ? <ErrorState message={(query.error as Error).message} onRetry={() => void query.refetch()} /> : null}
       {locationHintQuery.error ? <ErrorState message={(locationHintQuery.error as Error).message} onRetry={() => void locationHintQuery.refetch()} /> : null}
       {startMutation.error ? <ErrorState message={(startMutation.error as Error).message} /> : null}
+      {!query.isLoading && !query.error && query.data === null ? <InfoState message="目前沒有進行中的任務，請自由探索" /> : null}
       {progress ? (
         <>
           <div className="section-card primary-feature-card">
             <p className="section-kicker">{progress.stepLabel}</p>
-            <strong className="feature-title">{progress.stateText}</strong>
+            <strong className="feature-title">{progress.title}</strong>
             <p className="feature-copy">{progress.description}</p>
           </div>
           <div className="section-card split-card">

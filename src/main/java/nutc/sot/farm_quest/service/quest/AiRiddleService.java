@@ -172,7 +172,18 @@ public class AiRiddleService {
 
         AiRiddleResult result = answerPolicyService.evaluate(config, assistantReply, history, visitorMessage, judgeResponse, ragMetadata);
 
-        saveMessage(conversation, "ASSISTANT", result.replyContent(), modelName(), result.correct(), result.metadata(), OffsetDateTime.now());
+        // Update the VISITOR message with the answer correctness
+        AiRiddleMessageEntity visitorMsg = aiRiddleMessageRepository.findByConversation_IdOrderByCreatedAtAsc(conversation.getId())
+                .stream()
+                .filter(msg -> msg.getRole().equals("VISITOR") && msg.getContent().equals(visitorMessage))
+                .reduce((first, second) -> second) // Get the last matching message
+                .orElse(null);
+        if (visitorMsg != null) {
+            visitorMsg.setAnswerCorrect(result.correct());
+            aiRiddleMessageRepository.save(visitorMsg);
+        }
+
+        saveMessage(conversation, "ASSISTANT", result.replyContent(), modelName(), null, result.metadata(), OffsetDateTime.now());
         touchConversation(conversation, OffsetDateTime.now());
 
         QuestProgressEntity updatedProgress = progress;
