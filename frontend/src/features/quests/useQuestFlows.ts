@@ -89,6 +89,7 @@ export function useRiddleMessages(questId: string | undefined) {
   return useQuery({
     queryKey: ['riddle-messages', questId],
     enabled: Boolean(questId),
+    placeholderData: (previousData) => previousData,
     queryFn: async () => {
       if (!questId) {
         throw new Error('找不到任務編號。');
