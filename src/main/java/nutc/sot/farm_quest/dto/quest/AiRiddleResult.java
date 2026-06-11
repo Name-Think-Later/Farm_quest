@@ -6,6 +6,8 @@ public record AiRiddleResult(
         String replyContent,
         boolean answerAttempt,
         boolean correct,
+        String judgeVerdict,
+        String judgeReason,
         Map<String, Object> metadata
 ) {
 }

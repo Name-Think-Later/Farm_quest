@@ -10,6 +10,7 @@ public record AiRiddleMessageResponse(
         boolean correct,
         boolean questCompleted,
         String nextStep,
-        String safeMessage
+        String safeMessage,
+        String judgeReason
 ) {
 }

@@ -53,26 +53,56 @@ public class AiRiddleService {
     @Value("${spring.ai.openai.chat.options.model:${SPRING_AI_CHAT_MODEL:openai}}")
     private String                               chatModelName;
 
-    @Transactional(readOnly = true)
+    @Transactional
     public AiRiddleConversationResponse getConversation(String token, UUID questId) {
         VisitorSessionEntity       session      = sessionService.requireActiveSession(token);
         QuestEntity                quest        = requireAvailableQuest(session, questId);
         QuestProgressEntity        progress     = requireReadableProgress(session, quest);
         AiRiddleConversationEntity conversation = findConversation(session, quest, progress).orElse(null);
-        List<AiRiddleMessageItem> messages = conversation == null
-                ? List.of()
-                : aiRiddleMessageRepository.findByConversation_IdOrderByCreatedAtAsc(conversation.getId())
+
+        if (conversation == null) {
+            conversation = initializeConversation(session, quest, progress);
+        }
+
+        List<AiRiddleMessageItem> messages = aiRiddleMessageRepository.findByConversation_IdOrderByCreatedAtAsc(conversation.getId())
                 .stream()
                 .map(this::toMessageItem)
                 .toList();
         return new AiRiddleConversationResponse(
                 quest.getId(),
-                conversation == null ? null : conversation.getId(),
+                conversation.getId(),
                 progress.getStatus(),
                 "COMPLETED".equals(progress.getStatus()),
                 nextStep(progress.getStatus()),
                 messages
         );
+    }
+
+    private AiRiddleConversationEntity initializeConversation(VisitorSessionEntity session, QuestEntity quest, QuestProgressEntity progress) {
+        AiRiddleConfigEntity config =
+                aiRiddleConfigRepository
+                        .findByQuest_IdAndStatus(quest.getId(), "ACTIVE")
+                        .orElseThrow(() -> new QuestException(QuestErrorCode.AI_RIDDLE_NOT_AVAILABLE, HttpStatus.BAD_REQUEST, "AI riddle is not available"));
+
+        AiRiddleConversationEntity conversation = createConversation(session, quest);
+        progressService.markAiRiddleStarted(progress, conversation);
+
+        OffsetDateTime now = OffsetDateTime.now();
+        PromptPolicyService.PromptBundle promptBundle = promptPolicyService.build(config, quest, progress, List.of(), List.of(), null, true);
+
+        String assistantReply;
+        try {
+            assistantReply = chatClient.prompt()
+                    .system(promptBundle.systemPrompt())
+                    .user(promptBundle.userPrompt())
+                    .call()
+                    .content();
+        } catch (RuntimeException exception) {
+            throw new QuestException(QuestErrorCode.AI_PROVIDER_UNAVAILABLE, HttpStatus.SERVICE_UNAVAILABLE, "AI provider is unavailable");
+        }
+
+        saveMessage(conversation, "ASSISTANT", assistantReply, modelName(), null, Map.of("source", "ai", "isOpeningMessage", true), now);
+        return conversation;
     }
 
     @Transactional
@@ -91,8 +121,7 @@ public class AiRiddleService {
         }
 
         AiRiddleConversationEntity conversation = findConversation(session, quest, progress)
-                .orElseGet(() -> createConversation(session, quest));
-        progress = progressService.markAiRiddleStarted(progress, conversation);
+                .orElseThrow(() -> new QuestException(QuestErrorCode.AI_RIDDLE_NOT_INITIALIZED, HttpStatus.INTERNAL_SERVER_ERROR, "AI riddle conversation is not initialized"));
 
         OffsetDateTime now = OffsetDateTime.now();
         saveMessage(conversation, "VISITOR", visitorMessage, null, null, Map.of("source", "visitor"), now);
@@ -102,7 +131,7 @@ public class AiRiddleService {
                 .map(this::toMessageItem)
                 .toList();
         List<Document>                   documents    = ragService.retrieve(visitorMessage, new PromptPolicyService.PromptContext(quest, progress));
-        PromptPolicyService.PromptBundle promptBundle = promptPolicyService.build(config, quest, progress, history, documents, visitorMessage);
+        PromptPolicyService.PromptBundle promptBundle = promptPolicyService.build(config, quest, progress, history, documents, visitorMessage, false);
 
         String assistantReply;
         try {
@@ -118,7 +147,30 @@ public class AiRiddleService {
         Map<String, Object> ragMetadata = new HashMap<>();
         ragMetadata.put("documentCount", documents.size());
         ragMetadata.put("documentIds", documents.stream().map(Document::getId).toList());
-        AiRiddleResult result = answerPolicyService.evaluate(config, assistantReply, history, visitorMessage, ragMetadata);
+
+        PromptPolicyService.PromptBundle judgePrompt = promptPolicyService.buildJudgePrompt(
+                config,
+                quest,
+                progress,
+                history,
+                documents,
+                visitorMessage,
+                assistantReply
+        );
+
+        String judgeResponse;
+        try {
+            judgeResponse = chatClient.prompt()
+                    .system(judgePrompt.systemPrompt())
+                    .user(judgePrompt.userPrompt())
+                    .call()
+                    .content();
+        } catch (RuntimeException exception) {
+            judgeResponse = null;
+            ragMetadata.put("judgeProviderUnavailable", true);
+        }
+
+        AiRiddleResult result = answerPolicyService.evaluate(config, assistantReply, history, visitorMessage, judgeResponse, ragMetadata);
 
         saveMessage(conversation, "ASSISTANT", result.replyContent(), modelName(), result.correct(), result.metadata(), OffsetDateTime.now());
         touchConversation(conversation, OffsetDateTime.now());
@@ -139,7 +191,8 @@ public class AiRiddleService {
                 result.correct(),
                 "COMPLETED".equals(updatedProgress.getStatus()),
                 nextStep(updatedProgress.getStatus()),
-                result.correct() ? null : "請依照線索繼續作答。"
+                result.correct() ? null : "請依照線索繼續作答。",
+                result.judgeReason()
         );
     }
 

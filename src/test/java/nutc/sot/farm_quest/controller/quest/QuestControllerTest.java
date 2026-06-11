@@ -237,7 +237,8 @@ class QuestControllerTest {
                         false,
                         false,
                         "AI_RIDDLE_AVAILABLE",
-                        "請依照線索繼續作答。"
+                        "請依照線索繼續作答。",
+                        "使用者尚未提供符合題意的答案。"
                 ));
 
         mockMvc.perform(post("/api/quests/{questId}/ai-riddle/messages", questId)

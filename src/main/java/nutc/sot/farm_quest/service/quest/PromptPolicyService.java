@@ -14,7 +14,16 @@ public interface PromptPolicyService {
                        QuestProgressEntity progress,
                        List<AiRiddleMessageItem> history,
                        List<Document> documents,
-                       String visitorMessage);
+                       String visitorMessage,
+                       boolean isStartTrigger);
+
+    PromptBundle buildJudgePrompt(AiRiddleConfigEntity config,
+                                  QuestEntity quest,
+                                  QuestProgressEntity progress,
+                                  List<AiRiddleMessageItem> history,
+                                  List<Document> documents,
+                                  String visitorMessage,
+                                  String assistantReply);
 
     record PromptBundle(String systemPrompt, String userPrompt) {
     }

@@ -1,4 +1,4 @@
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MobileShell } from '../../components/layout/MobileShell';
 import { NetworkBanner } from '../../components/feedback/NetworkBanner';

@@ -12,5 +12,6 @@ public interface AnswerPolicyService {
                             String assistantReply,
                             List<AiRiddleMessageItem> history,
                             String visitorMessage,
+                            String judgeResponse,
                             Map<String, Object> metadata);
 }
