@@ -19,26 +19,28 @@ export function CurrentQuestPage() {
     <MobileShell
       title="任務首頁 / 目前任務"
       actions={
-        <button
-          type="button"
-          className="primary-button"
-          disabled={!progress || startMutation.isPending}
-          onClick={async () => {
-            if (!progress) {
-              return;
-            }
+        query.data === null ? null : (
+          <button
+            type="button"
+            className="primary-button"
+            disabled={!progress || startMutation.isPending}
+            onClick={async () => {
+              if (!progress) {
+                return;
+              }
 
-            if (progress.canStartQuest) {
-              await startMutation.mutateAsync(progress.questId);
-              navigate('/quest/location');
-              return;
-            }
+              if (progress.canStartQuest) {
+                await startMutation.mutateAsync(progress.questId);
+                navigate('/quest/location');
+                return;
+              }
 
-            navigate(progress.nextRoute);
-          }}
-        >
-          {startMutation.isPending ? '開始中…' : progress?.nextAction ?? '前往下一步'}
-        </button>
+              navigate(progress.nextRoute);
+            }}
+          >
+            {startMutation.isPending ? '開始中…' : progress?.nextAction ?? '前往下一步'}
+          </button>
+        )
       }
     >
       <NetworkBanner />

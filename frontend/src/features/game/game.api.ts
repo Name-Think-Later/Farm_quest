@@ -31,8 +31,8 @@ export function resolveEntryAction(gameState: GameStateResponse | null, invalidS
       invalidSession: false,
       nextRoute: '/auth/email',
       ctaLabel: '前往 Email 登入',
-      headline: '下一步：先完成 Email 登入',
-      description: '登入後才能進入任務、GPS 驗證、AI 猜謎與優惠券流程。',
+      headline: '請先進行Email驗證',
+      description: '登入後即可開始任務',
     };
   }
 

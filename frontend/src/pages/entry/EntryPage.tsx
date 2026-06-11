@@ -82,11 +82,6 @@ export function EntryPage() {
           <p>{action.description}</p>
         </div>
       )}
-      <div className="hero-card page-hero-card">
-        <p className="hero-kicker">走進茶園，跟著提示一步步探索</p>
-        <strong className="feature-title">從登入開始今天的探索旅程</strong>
-        <p className="hero-body">掃描入口後，先完成 Email 登入與 OTP 驗證，再依序進入任務、GPS 驗證、AI 猜謎與優惠券領取。</p>
-      </div>
     </MobileShell>
   );
 }
