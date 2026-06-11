@@ -9,8 +9,6 @@ import java.util.UUID;
 public record AdminCouponCampaignRequest(
         @NotNull(message = "questId is required")
         UUID questId,
-        @NotBlank(message = "merchantCode is required")
-        String merchantCode,
         @NotBlank(message = "code is required")
         String code,
         @NotBlank(message = "title is required")

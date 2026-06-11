@@ -11,6 +11,7 @@ import nutc.sot.farm_quest.exception.QuestErrorCode;
 import nutc.sot.farm_quest.exception.QuestException;
 import nutc.sot.farm_quest.persistence.entity.CouponCampaignEntity;
 import nutc.sot.farm_quest.persistence.entity.CouponEntity;
+import nutc.sot.farm_quest.persistence.entity.MerchantEntity;
 import nutc.sot.farm_quest.persistence.entity.QuestEntity;
 import nutc.sot.farm_quest.persistence.entity.VisitorAccountEntity;
 import nutc.sot.farm_quest.persistence.entity.VisitorSessionEntity;
@@ -101,13 +102,15 @@ public class CouponService {
     }
 
     private CouponSummary toSummary(CouponEntity coupon) {
+        CouponCampaignEntity campaign = coupon.getCouponCampaign();
+        MerchantEntity merchant = campaign.getMerchant();
         return new CouponSummary(
                 coupon.getId(),
                 coupon.getQuest().getId(),
-                coupon.getCouponCampaign().getId(),
-                coupon.getCouponCampaign().getMerchant().getId(),
-                coupon.getCouponCampaign().getTitle(),
-                coupon.getCouponCampaign().getMerchant().getName(),
+                campaign.getId(),
+                merchant != null ? merchant.getId() : null,
+                campaign.getTitle(),
+                merchant != null ? merchant.getName() : null,
                 resolveStatus(coupon, OffsetDateTime.now()),
                 coupon.getDisplayCode(),
                 coupon.getIssuedAt(),
@@ -117,15 +120,17 @@ public class CouponService {
     }
 
     private CouponDetailResponse toDetail(CouponEntity coupon) {
+        CouponCampaignEntity campaign = coupon.getCouponCampaign();
+        MerchantEntity merchant = campaign.getMerchant();
         return new CouponDetailResponse(
                 coupon.getId(),
                 coupon.getQuest().getId(),
-                coupon.getCouponCampaign().getId(),
-                coupon.getCouponCampaign().getMerchant().getId(),
-                coupon.getCouponCampaign().getTitle(),
-                coupon.getCouponCampaign().getDescription(),
-                coupon.getCouponCampaign().getMerchant().getName(),
-                coupon.getCouponCampaign().getMerchant().getAddress(),
+                campaign.getId(),
+                merchant != null ? merchant.getId() : null,
+                campaign.getTitle(),
+                campaign.getDescription(),
+                merchant != null ? merchant.getName() : null,
+                merchant != null ? merchant.getAddress() : null,
                 resolveStatus(coupon, OffsetDateTime.now()),
                 coupon.getDisplayCode(),
                 coupon.getIssuedAt(),

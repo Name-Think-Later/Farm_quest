@@ -7,7 +7,7 @@ import {
   startQuest,
   verifyLocation,
 } from './quests.api';
-import type { LocationVerificationPayload } from './types';
+import type { AiRiddleConversationResponse, AiRiddleMessage, LocationVerificationPayload } from './types';
 
 export function useCurrentQuest() {
   return useQuery({
@@ -90,6 +90,7 @@ export function useRiddleMessages(questId: string | undefined) {
     queryKey: ['riddle-messages', questId],
     enabled: Boolean(questId),
     placeholderData: (previousData) => previousData,
+    refetchOnWindowFocus: false,
     queryFn: async () => {
       if (!questId) {
         throw new Error('找不到任務編號。');
@@ -117,14 +118,53 @@ export function useRiddleChat(questId: string | undefined) {
       if (!result.ok) {
         throw new Error(result.message);
       }
-      return result.data;
+      return { input, response: result.data };
     },
-    onSuccess: async () => {
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['riddle-messages', questId] }),
-        queryClient.invalidateQueries({ queryKey: ['current-quest'] }),
-        queryClient.invalidateQueries({ queryKey: ['game-state'] }),
-      ]);
+    onSuccess: async (data) => {
+      const { input, response } = data;
+
+      if (response.questCompleted) {
+        // 任务完成时，手动更新消息数据，避免重新 fetch 导致的错误
+        const currentData = queryClient.getQueryData<AiRiddleConversationResponse>(['riddle-messages', questId]);
+        if (currentData) {
+          const now = new Date().toISOString();
+          const userMessage: AiRiddleMessage = {
+            messageId: `temp-user-${Date.now()}`,
+            role: 'VISITOR',
+            content: input,
+            answerCorrect: null,
+            createdAt: now,
+          };
+          const aiMessage: AiRiddleMessage = {
+            messageId: `temp-ai-${Date.now()}`,
+            role: 'ASSISTANT',
+            content: response.safeMessage ?? response.replyContent,
+            answerCorrect: response.correct,
+            createdAt: now,
+          };
+
+          queryClient.setQueryData(['riddle-messages', questId], {
+            questId: response.questId,
+            conversationId: response.conversationId,
+            status: 'COMPLETED',
+            questCompleted: true,
+            nextStep: response.nextStep,
+            messages: [...currentData.messages, userMessage, aiMessage],
+          });
+        }
+
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ['current-quest'] }),
+          queryClient.invalidateQueries({ queryKey: ['game-state'] }),
+        ]);
+      } else {
+        // 任务未完成，正常刷新消息列表
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ['riddle-messages', questId] }),
+          queryClient.invalidateQueries({ queryKey: ['current-quest'] }),
+          queryClient.invalidateQueries({ queryKey: ['game-state'] }),
+        ]);
+      }
     },
   });
 }

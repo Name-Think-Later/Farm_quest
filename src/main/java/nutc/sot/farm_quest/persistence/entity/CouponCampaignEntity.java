@@ -25,8 +25,8 @@ public class CouponCampaignEntity {
     @JoinColumn(name = "quest_id", nullable = false)
     private QuestEntity quest;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "merchant_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
+    @JoinColumn(name = "merchant_id", nullable = true)
     private MerchantEntity merchant;
 
     @Column(nullable = false, length = 64)

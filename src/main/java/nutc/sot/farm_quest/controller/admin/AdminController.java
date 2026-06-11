@@ -13,9 +13,10 @@ import nutc.sot.farm_quest.dto.admin.AdminCouponCampaignResponse;
 import nutc.sot.farm_quest.dto.admin.AdminCouponCampaignStatsListResponse;
 import nutc.sot.farm_quest.dto.admin.AdminCouponListResponse;
 import nutc.sot.farm_quest.dto.admin.AdminCouponUsageListResponse;
-import nutc.sot.farm_quest.dto.admin.AdminLocationHotspotRequest;
 import nutc.sot.farm_quest.dto.admin.AdminLocationListResponse;
+import nutc.sot.farm_quest.dto.admin.AdminLocationRequest;
 import nutc.sot.farm_quest.dto.admin.AdminLocationResponse;
+import nutc.sot.farm_quest.dto.admin.AdminLocationUpdateRequest;
 import nutc.sot.farm_quest.dto.admin.AdminOverviewStatsResponse;
 import nutc.sot.farm_quest.dto.admin.AdminQuestCompletionStatsListResponse;
 import nutc.sot.farm_quest.dto.admin.AdminQuestListResponse;
@@ -83,12 +84,19 @@ public class AdminController {
         return ResponseEntity.ok(ApiResponse.success(adminLocationService.getLocations()));
     }
 
-    @PutMapping("/locations/{locationId}/hotspot")
-    public ResponseEntity<ApiResponse<AdminLocationResponse>> updateLocationHotspot(@PathVariable UUID locationId,
-                                                                                     @Valid @RequestBody AdminLocationHotspotRequest request,
-                                                                                     HttpServletRequest httpServletRequest) {
+    @PostMapping("/locations")
+    public ResponseEntity<ApiResponse<AdminLocationResponse>> createLocation(@Valid @RequestBody AdminLocationRequest request,
+                                                                              HttpServletRequest httpServletRequest) {
         requireAdmin(httpServletRequest);
-        return ResponseEntity.ok(ApiResponse.success(adminLocationService.updateHotspot(locationId, request)));
+        return ResponseEntity.ok(ApiResponse.success(adminLocationService.createLocation(request)));
+    }
+
+    @PutMapping("/locations/{locationId}")
+    public ResponseEntity<ApiResponse<AdminLocationResponse>> updateLocation(@PathVariable UUID locationId,
+                                                                              @Valid @RequestBody AdminLocationUpdateRequest request,
+                                                                              HttpServletRequest httpServletRequest) {
+        requireAdmin(httpServletRequest);
+        return ResponseEntity.ok(ApiResponse.success(adminLocationService.updateLocation(locationId, request)));
     }
 
     @GetMapping("/ai-riddles")

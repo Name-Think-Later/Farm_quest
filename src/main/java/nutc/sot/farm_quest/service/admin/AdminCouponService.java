@@ -59,8 +59,6 @@ public class AdminCouponService {
     public AdminCouponCampaignResponse createCouponCampaign(AdminCouponCampaignRequest request) {
         GameEntity game = getCurrentGame();
         QuestEntity quest = getQuestInCurrentGame(request.questId(), game.getId());
-        MerchantEntity merchant = merchantRepository.findByGame_IdAndCode(game.getId(), normalizeRequired(request.merchantCode(), "merchantCode"))
-                .orElseThrow(() -> new QuestException(QuestErrorCode.MERCHANT_NOT_FOUND, HttpStatus.NOT_FOUND, "Merchant not found"));
 
         if (request.validFrom() != null && request.validUntil() != null && request.validUntil().isBefore(request.validFrom())) {
             throw new QuestException(QuestErrorCode.ADMIN_INVALID_REQUEST, HttpStatus.BAD_REQUEST, "validUntil must be after validFrom");
@@ -71,7 +69,6 @@ public class AdminCouponService {
         campaign.setId(UUID.randomUUID());
         campaign.setGame(game);
         campaign.setQuest(quest);
-        campaign.setMerchant(merchant);
         campaign.setCode(normalizeRequired(request.code(), "code"));
         campaign.setTitle(normalizeRequired(request.title(), "title"));
         campaign.setDescription(StringUtils.hasText(request.description()) ? request.description().trim() : null);
@@ -138,11 +135,12 @@ public class AdminCouponService {
     }
 
     private AdminCouponCampaignResponse toCampaignResponse(CouponCampaignEntity campaign) {
+        MerchantEntity merchant = campaign.getMerchant();
         return new AdminCouponCampaignResponse(
                 campaign.getId(),
                 campaign.getQuest().getId(),
-                campaign.getMerchant().getId(),
-                campaign.getMerchant().getName(),
+                merchant != null ? merchant.getId() : null,
+                merchant != null ? merchant.getName() : null,
                 campaign.getCode(),
                 campaign.getTitle(),
                 campaign.getDescription(),
