@@ -90,7 +90,11 @@ export function useRiddleMessages(questId: string | undefined) {
     queryKey: ['riddle-messages', questId],
     enabled: Boolean(questId),
     placeholderData: (previousData) => previousData,
+    staleTime: Infinity,
+    gcTime: Infinity,
     refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    refetchInterval: false,
     queryFn: async () => {
       if (!questId) {
         throw new Error('找不到任務編號。');
@@ -122,10 +126,14 @@ export function useRiddleChat(questId: string | undefined) {
     },
     onSuccess: async (data) => {
       const { input, response } = data;
+      const currentQuestId = questId;
 
       if (response.questCompleted) {
-        // 任务完成时，手动更新消息数据，避免重新 fetch 导致的错误
-        const currentData = queryClient.getQueryData<AiRiddleConversationResponse>(['riddle-messages', questId]);
+        // 任务完成时，取消所有正在进行的 riddle-messages 查询
+        queryClient.cancelQueries({ queryKey: ['riddle-messages'] });
+
+        // 手动更新消息数据，避免重新 fetch 导致的错误
+        const currentData = queryClient.getQueryData<AiRiddleConversationResponse>(['riddle-messages', currentQuestId]);
         if (currentData) {
           const now = new Date().toISOString();
           const userMessage: AiRiddleMessage = {
@@ -143,7 +151,7 @@ export function useRiddleChat(questId: string | undefined) {
             createdAt: now,
           };
 
-          queryClient.setQueryData(['riddle-messages', questId], {
+          queryClient.setQueryData(['riddle-messages', currentQuestId], {
             questId: response.questId,
             conversationId: response.conversationId,
             status: 'COMPLETED',
@@ -160,7 +168,7 @@ export function useRiddleChat(questId: string | undefined) {
       } else {
         // 任务未完成，正常刷新消息列表
         await Promise.all([
-          queryClient.invalidateQueries({ queryKey: ['riddle-messages', questId] }),
+          queryClient.invalidateQueries({ queryKey: ['riddle-messages', currentQuestId] }),
           queryClient.invalidateQueries({ queryKey: ['current-quest'] }),
           queryClient.invalidateQueries({ queryKey: ['game-state'] }),
         ]);

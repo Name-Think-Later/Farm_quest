@@ -14,17 +14,25 @@ export function RiddleChatPage() {
   const resetSession = useSessionStore((state) => state.resetSession);
   const [input, setInput] = useState('');
   const [questCompleted, setQuestCompleted] = useState(false);
+  const [persistedQuestId, setPersistedQuestId] = useState<string | undefined>();
   const currentQuestQuery = useCurrentQuest();
-  const questId = currentQuestQuery.data?.questId;
+  const questId = persistedQuestId ?? currentQuestQuery.data?.questId;
   const messagesQuery = useRiddleMessages(questId);
   const mutation = useRiddleChat(questId);
   const chatMessages = toChatMessages(messagesQuery.data?.messages ?? []);
+
+  // 首次加载时保存 questId
+  useEffect(() => {
+    if (currentQuestQuery.data?.questId && !persistedQuestId) {
+      setPersistedQuestId(currentQuestQuery.data.questId);
+    }
+  }, [currentQuestQuery.data?.questId, persistedQuestId]);
 
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault();
     if (!input.trim()) return;
     const result = await mutation.mutateAsync(input);
-    if (result.questCompleted) {
+    if (result.response.questCompleted) {
       setQuestCompleted(true);
     }
     setInput('');
@@ -56,7 +64,7 @@ export function RiddleChatPage() {
         <NetworkBanner />
         {currentQuestQuery.isLoading || messagesQuery.isLoading ? <LoadingState message="正在載入對話紀錄…" /> : null}
         {currentQuestQuery.error ? <ErrorState message={(currentQuestQuery.error as Error).message} onRetry={() => void currentQuestQuery.refetch()} /> : null}
-        {messagesQuery.error ? <ErrorState message={(messagesQuery.error as Error).message} onRetry={() => void messagesQuery.refetch()} /> : null}
+        {!questCompleted && currentQuestQuery.data !== null && messagesQuery.error ? <ErrorState message={(messagesQuery.error as Error).message} onRetry={() => void messagesQuery.refetch()} /> : null}
         {mutation.error ? <ErrorState message={(mutation.error as Error).message} /> : null}
         {currentQuestQuery.data === null && !currentQuestQuery.isLoading ? <InfoState title="任務已完成" message="此景點任務已完成，您已獲得優惠券。可前往優惠券頁查看。" /> : null}
         <div className="chat-log line-chat-log">
