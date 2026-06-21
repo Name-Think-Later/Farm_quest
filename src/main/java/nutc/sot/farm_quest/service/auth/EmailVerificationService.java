@@ -64,8 +64,8 @@ public class EmailVerificationService {
         verification.setCreatedAt(now);
 
         emailVerificationRepository.save(verification);
-        rateLimitService.recordVerificationRequested(normalizedEmail, resendAvailableAt);
         mailService.sendOtp(normalizedEmail, otp);
+        rateLimitService.recordVerificationRequested(normalizedEmail, resendAvailableAt);
 
         return new EmailVerificationResponse(
                 normalizedEmail,

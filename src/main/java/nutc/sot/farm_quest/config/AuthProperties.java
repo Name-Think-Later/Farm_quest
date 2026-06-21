@@ -19,4 +19,12 @@ public class AuthProperties {
     private String emailVerificationSecret;
     private String mailMode;
     private String mailFrom;
+    private String mailSubject;
+    private String mailHost;
+    private Integer mailPort;
+    private String mailUsername;
+    private String mailPassword;
+    private boolean mailAuth;
+    private boolean mailStarttlsEnabled;
+    private boolean mailSslEnabled;
 }
