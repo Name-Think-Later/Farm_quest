@@ -4,7 +4,6 @@ export type CouponSummaryResponse = {
   couponId: string;
   questId: string;
   couponCampaignId: string;
-  merchantId: string;
   title: string;
   merchantName: string;
   status: CouponStatus;
@@ -18,17 +17,17 @@ export type CouponDetailResponse = {
   couponId: string;
   questId: string;
   couponCampaignId: string;
-  merchantId: string;
   title: string;
   description: string;
   merchantName: string;
-  merchantAddress: string;
+  merchantAddress: string | null;
   status: CouponStatus;
   displayCode: string;
   issuedAt: string;
   expiresAt: string;
   consumedAt: string | null;
 };
+
 
 export type Coupon = {
   id: string;

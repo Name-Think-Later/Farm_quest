@@ -11,7 +11,7 @@ import type {
 } from './types';
 
 export async function fetchCurrentQuest() {
-  return apiGet<QuestDetailResponse>('/api/quests/current', {
+  return apiGet<QuestDetailResponse | null>('/api/quests/current', {
     authenticated: true,
   });
 }

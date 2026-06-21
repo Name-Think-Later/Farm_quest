@@ -6,8 +6,8 @@ import java.util.UUID;
 public record AdminCouponCampaignResponse(
         UUID campaignId,
         UUID questId,
-        UUID merchantId,
         String merchantName,
+        String merchantAddress,
         String code,
         String title,
         String description,

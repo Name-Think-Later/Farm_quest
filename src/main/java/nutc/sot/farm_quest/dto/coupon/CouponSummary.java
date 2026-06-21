@@ -7,7 +7,6 @@ public record CouponSummary(
         UUID couponId,
         UUID questId,
         UUID couponCampaignId,
-        UUID merchantId,
         String title,
         String merchantName,
         String status,

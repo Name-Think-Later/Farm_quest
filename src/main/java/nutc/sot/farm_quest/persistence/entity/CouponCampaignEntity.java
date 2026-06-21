@@ -25,9 +25,11 @@ public class CouponCampaignEntity {
     @JoinColumn(name = "quest_id", nullable = false)
     private QuestEntity quest;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = true)
-    @JoinColumn(name = "merchant_id", nullable = true)
-    private MerchantEntity merchant;
+    @Column(name = "merchant_name", nullable = false)
+    private String merchantName;
+
+    @Column(name = "merchant_address")
+    private String merchantAddress;
 
     @Column(nullable = false, length = 64)
     private String code;
@@ -59,8 +61,10 @@ public class CouponCampaignEntity {
     public void setGame(GameEntity game) { this.game = game; }
     public QuestEntity getQuest() { return quest; }
     public void setQuest(QuestEntity quest) { this.quest = quest; }
-    public MerchantEntity getMerchant() { return merchant; }
-    public void setMerchant(MerchantEntity merchant) { this.merchant = merchant; }
+    public String getMerchantName() { return merchantName; }
+    public void setMerchantName(String merchantName) { this.merchantName = merchantName; }
+    public String getMerchantAddress() { return merchantAddress; }
+    public void setMerchantAddress(String merchantAddress) { this.merchantAddress = merchantAddress; }
     public String getCode() { return code; }
     public void setCode(String code) { this.code = code; }
     public String getTitle() { return title; }

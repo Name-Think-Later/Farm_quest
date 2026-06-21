@@ -6,7 +6,6 @@ import java.util.UUID;
 import nutc.sot.farm_quest.persistence.entity.CouponCampaignEntity;
 import nutc.sot.farm_quest.persistence.entity.CouponEntity;
 import nutc.sot.farm_quest.persistence.entity.GameEntity;
-import nutc.sot.farm_quest.persistence.entity.MerchantEntity;
 import nutc.sot.farm_quest.persistence.entity.QuestEntity;
 import nutc.sot.farm_quest.persistence.entity.VisitorAccountEntity;
 import nutc.sot.farm_quest.persistence.entity.VisitorSessionEntity;
@@ -122,7 +121,8 @@ class CouponServiceTest {
         campaign.setId(UUID.fromString("55555555-5555-5555-5555-555555555555"));
         campaign.setGame(game());
         campaign.setQuest(quest());
-        campaign.setMerchant(merchant());
+        campaign.setMerchantName("春茶小舖");
+        campaign.setMerchantAddress("南投縣名間鄉茶園路 1 號");
         campaign.setCode("tea-coupon-01");
         campaign.setTitle("茶香折扣券");
         campaign.setDescription("完成任務後可折抵 50 元");
@@ -143,15 +143,6 @@ class CouponServiceTest {
         coupon.setExpiresAt(OffsetDateTime.parse("2026-06-16T10:00:00+08:00"));
         coupon.setDisplayCode("TEACOUP-ABCD1234");
         return coupon;
-    }
-
-    private MerchantEntity merchant() {
-        MerchantEntity merchant = new MerchantEntity();
-        merchant.setId(UUID.fromString("44444444-4444-4444-4444-444444444444"));
-        merchant.setGame(game());
-        merchant.setName("春茶小舖");
-        merchant.setAddress("南投縣名間鄉茶園路 1 號");
-        return merchant;
     }
 
     private GameEntity game() {

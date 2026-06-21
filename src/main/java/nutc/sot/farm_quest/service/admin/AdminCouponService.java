@@ -19,13 +19,11 @@ import nutc.sot.farm_quest.persistence.entity.CouponCampaignEntity;
 import nutc.sot.farm_quest.persistence.entity.CouponEntity;
 import nutc.sot.farm_quest.persistence.entity.CouponUsageEntity;
 import nutc.sot.farm_quest.persistence.entity.GameEntity;
-import nutc.sot.farm_quest.persistence.entity.MerchantEntity;
 import nutc.sot.farm_quest.persistence.entity.QuestEntity;
 import nutc.sot.farm_quest.persistence.repository.CouponCampaignRepository;
 import nutc.sot.farm_quest.persistence.repository.CouponRepository;
 import nutc.sot.farm_quest.persistence.repository.CouponUsageRepository;
 import nutc.sot.farm_quest.persistence.repository.GameRepository;
-import nutc.sot.farm_quest.persistence.repository.MerchantRepository;
 import nutc.sot.farm_quest.persistence.repository.QuestRepository;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -42,7 +40,6 @@ public class AdminCouponService {
     private final CouponCampaignRepository couponCampaignRepository;
     private final CouponRepository couponRepository;
     private final CouponUsageRepository couponUsageRepository;
-    private final MerchantRepository merchantRepository;
     private final QuestRepository questRepository;
     private final GameRepository gameRepository;
     private final AuthProperties authProperties;
@@ -69,6 +66,8 @@ public class AdminCouponService {
         campaign.setId(UUID.randomUUID());
         campaign.setGame(game);
         campaign.setQuest(quest);
+        campaign.setMerchantName(normalizeRequired(request.merchantName(), "merchantName"));
+        campaign.setMerchantAddress(StringUtils.hasText(request.merchantAddress()) ? request.merchantAddress().trim() : null);
         campaign.setCode(normalizeRequired(request.code(), "code"));
         campaign.setTitle(normalizeRequired(request.title(), "title"));
         campaign.setDescription(StringUtils.hasText(request.description()) ? request.description().trim() : null);
@@ -135,12 +134,11 @@ public class AdminCouponService {
     }
 
     private AdminCouponCampaignResponse toCampaignResponse(CouponCampaignEntity campaign) {
-        MerchantEntity merchant = campaign.getMerchant();
         return new AdminCouponCampaignResponse(
                 campaign.getId(),
                 campaign.getQuest().getId(),
-                merchant != null ? merchant.getId() : null,
-                merchant != null ? merchant.getName() : null,
+                campaign.getMerchantName(),
+                campaign.getMerchantAddress(),
                 campaign.getCode(),
                 campaign.getTitle(),
                 campaign.getDescription(),
