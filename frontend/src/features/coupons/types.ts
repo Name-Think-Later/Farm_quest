@@ -59,7 +59,7 @@ export function toCouponDetail(detail: CouponDetailResponse): Coupon {
     id: detail.couponId,
     title: detail.title,
     merchant: detail.merchantName,
-    merchantAddress: detail.merchantAddress,
+    merchantAddress: detail.merchantAddress ?? undefined,
     expiresAt: detail.expiresAt,
     status: detail.status,
     usageText: couponUsageText(detail.status, detail.consumedAt),
